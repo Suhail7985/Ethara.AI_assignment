@@ -2,7 +2,7 @@ import axios from 'axios';
 import useAuthStore from '../store/useAuthStore';
 
 // For separate deployments, the frontend must know the exact backend URL.
-// We use VITE_API_URL which you will set in your hosting provider (like Railway).
+// We use VITE_API_URL which is set in your .env file or hosting provider.
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const API = axios.create({
