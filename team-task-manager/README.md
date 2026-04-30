@@ -1,73 +1,53 @@
-# 🚀 TaskFlow SaaS - Team Task Manager
+# 🚀 TaskFlow: Professional Team Task Manager
 
-A professional-grade, full-stack Team Task Manager SaaS application built with the MERN stack. Designed for high-performance teams that require precision, speed, and real-time collaboration.
+TaskFlow is a high-performance, full-stack SaaS platform designed for modern teams to manage projects, delegate tasks, and track productivity with a strict administrative hierarchy.
 
-## ✨ Features
+## ✨ Key Features
 
-- **🛡️ Secure Auth**: JWT-based authentication with role-based access control (Admin/Member).
-- **📊 Analytics Dashboard**: Real-time insights into project progress, task status, and team productivity using Recharts.
-- **📁 Project Management**: Create, update, and monitor multi-member projects with deadline tracking.
-- **📋 Kanban Board**: Interactive drag-and-drop workflow management powered by `@hello-pangea/dnd`.
-- **💬 Task Collaboration**: Threaded comments and task-specific updates.
-- **🔔 Real-time Notifications**: Instant updates via Socket.io for assignments and project changes.
-- **🎨 Premium UI**: Modern dark-mode-first design with Tailwind CSS, Framer Motion, and Glassmorphism.
+- **🛡️ Command & Control RBAC**: Strict role-based access control where Admins manage work and Members execute tasks.
+- **📋 Dynamic Kanban Board**: Real-time task visualization with drag-and-drop workflow management.
+- **📊 Deep Analytics**: Live workspace overview with productivity efficiency, status breakdown, and overdue tracking.
+- **👥 Team Management**: Professional invitation system and member workload tracking (Admin Only).
+- **🎨 Premium UI/UX**: State-of-the-art Glassmorphism design with Dark Mode support and responsive mobile optimization.
+- **🔐 Secure Auth**: JWT-based authentication with secure profile and password management.
 
 ## 🛠️ Tech Stack
 
-**Frontend:**
-- React.js + Vite
-- Tailwind CSS (Styling)
-- Zustand (State Management)
-- TanStack Query (Data Fetching)
-- Framer Motion (Animations)
-- Recharts (Data Visualization)
+- **Frontend**: React 19, Vite, Tailwind CSS, Framer Motion, React Query, Zustand.
+- **Backend**: Node.js, Express.js, Socket.io (Real-time events).
+- **Database**: MongoDB with Mongoose ODM.
+- **Deployment**: Railway (Unified Full-Stack Service).
 
-**Backend:**
-- Node.js + Express
-- MongoDB + Mongoose (Database)
-- Socket.io (Real-time)
-- JWT + Bcrypt (Security)
-- Joi + Express-Validator (Validation)
+## 🌐 Live Deployment
 
-## 🚦 Getting Started
+**Live URL**: [Insert your Railway URL here]
 
-### Prerequisites
-- Node.js (v18+)
-- MongoDB Atlas account (or local MongoDB)
+### Railway Deployment Steps:
+1. Connect your GitHub repository to **Railway.app**.
+2. Set the following environment variables:
+   - `MONGODB_URI`: Your MongoDB connection string.
+   - `JWT_SECRET`: A secure random string for token signing.
+   - `NODE_ENV`: `production`
+3. Railway will automatically detect the root `package.json` and deploy the unified service.
 
-### Backend Setup
-1. `cd backend`
-2. `npm install`
-3. Create `.env` from `.env.example` and add your `MONGODB_URI` and `JWT_SECRET`.
-4. `npm run dev`
+## 📦 Local Setup
 
-### Frontend Setup
-1. `cd frontend`
-2. `npm install`
-3. `npm run dev`
+1. **Install Dependencies**:
+   ```bash
+   npm run install-all
+   ```
 
-## 🔑 Demo Credentials
-- **Admin**: `admin@demo.com` / `123456`
-- **Member**: `user@demo.com` / `123456`
+2. **Configure Environment**:
+   Create a `.env` file in the `backend/` directory with your MongoDB and JWT credentials.
 
-## 📡 API Endpoints
+3. **Run Application**:
+   ```bash
+   # Start Backend (Port 5000)
+   npm start --prefix backend
 
-### Auth
-- `POST /api/auth/register` - New user registration
-- `POST /api/auth/login` - User login
-- `GET /api/auth/profile` - Get current user
-
-### Projects
-- `GET /api/projects` - List all projects
-- `POST /api/projects` - Create new project (Admin/Owner)
-- `PUT /api/projects/:id` - Update project
-- `DELETE /api/projects/:id` - Remove project
-
-### Tasks
-- `GET /api/tasks` - List tasks with filters
-- `POST /api/tasks` - Create task
-- `PUT /api/tasks/:id` - Update status/details
-- `POST /api/tasks/:id/comments` - Add collaboration comment
+   # Start Frontend (Port 5173)
+   npm start --prefix frontend
+   ```
 
 ---
-Built by Antigravity AI for the Selection Winner Task.
+*Built for the Ethara.AI Full-Stack Development Assignment.*
