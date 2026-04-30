@@ -61,7 +61,7 @@ function App() {
             <Route path="/projects" element={<Projects />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/kanban" element={<Kanban />} />
-            <Route path="/team" element={<Team />} />
+            <Route path="/team" element={<AdminRoute><Team /></AdminRoute>} />
             <Route path="/settings" element={<Settings />} />
           </Route>
 

@@ -1,13 +1,14 @@
 import { Link, useLocation } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
+  LayoutGrid, 
   FolderKanban, 
-  CheckSquare, 
+  ListTodo, 
   Users, 
   Settings, 
-  Columns3,
+  Columns,
   LogOut,
-  X
+  X,
+  CheckSquare
 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 
@@ -17,12 +18,12 @@ const Sidebar = ({ isOpen, onClose }) => {
   const user = useAuthStore((state) => state.user);
 
   const menuItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { name: 'Projects', icon: FolderKanban, path: '/projects' },
-    { name: 'Tasks', icon: CheckSquare, path: '/tasks' },
-    { name: 'Kanban', icon: Columns3, path: '/kanban' },
-    { name: 'Team', icon: Users, path: '/team', adminOnly: true },
-    { name: 'Settings', icon: Settings, path: '/settings' },
+    { name: 'Dashboard', path: '/dashboard', icon: LayoutGrid },
+    { name: 'Projects', path: '/projects', icon: FolderKanban },
+    { name: 'Tasks', path: '/tasks', icon: ListTodo },
+    { name: 'Kanban', path: '/kanban', icon: Columns },
+    { name: 'Team', path: '/team', icon: Users, adminOnly: true },
+    { name: 'Settings', path: '/settings', icon: Settings },
   ];
 
   const filteredItems = menuItems.filter(item => !item.adminOnly || user?.role === 'admin');

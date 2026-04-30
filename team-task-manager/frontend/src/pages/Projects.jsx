@@ -94,13 +94,13 @@ const Projects = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Projects</h1>
-          <p className="text-slate-500 text-sm mt-1">Manage and track all your active team initiatives.</p>
+          <p className="text-slate-500 text-sm mt-1">Manage and track your workspace projects.</p>
         </div>
         
         {isAdmin && (
           <button onClick={handleCreate} className="btn-primary flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            Create Project
+            <Plus className="w-5 h-5" />
+            New Project
           </button>
         )}
       </div>
