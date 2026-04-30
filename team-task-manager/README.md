@@ -20,15 +20,30 @@ TaskFlow is a high-performance, full-stack SaaS platform designed for modern tea
 
 ## 🌐 Live Deployment
 
-**Live URL**: [Insert your Railway URL here]
+**Live URL**: [Insert your Frontend Railway URL here]
 
-### Railway Deployment Steps:
-1. Connect your GitHub repository to **Railway.app**.
-2. Set the following environment variables:
+### Railway Deployment Steps (Separate Services):
+This repository is a "Monorepo". You will create **TWO** services on Railway pointing to the same GitHub repository.
+
+#### 1. Deploy the Backend Service
+1. On Railway, click **New Project** -> **Deploy from GitHub repo** -> Select this repo.
+2. Go to the new service's **Settings** -> **Root Directory** and type `/backend`.
+3. Go to the **Variables** tab and add:
    - `MONGODB_URI`: Your MongoDB connection string.
    - `JWT_SECRET`: A secure random string for token signing.
-   - `NODE_ENV`: `production`
-3. Railway will automatically detect the root `package.json` and deploy the unified service.
+   - `PORT`: `5000`
+4. Go to **Settings** -> **Networking** and click "Generate Domain" (Copy this URL, you need it for the frontend).
+
+#### 2. Deploy the Frontend Service
+1. Click **New** (top right) -> **GitHub Repo** -> Select this repo again.
+2. Go to the new frontend service's **Settings** -> **Root Directory** and type `/frontend`.
+3. Go to the **Variables** tab and add:
+   - `VITE_API_URL`: The URL you copied from the backend (e.g., `https://backend-production.up.railway.app/api`).
+4. Go to **Settings** -> **Networking** and generate a domain.
+
+#### 3. Connect them (CORS)
+1. Go back to your **Backend Service** -> **Variables**.
+2. Add `CLIENT_URL` and paste your Frontend's generated domain (e.g., `https://frontend-production.up.railway.app`).
 
 ## 📦 Local Setup
 
