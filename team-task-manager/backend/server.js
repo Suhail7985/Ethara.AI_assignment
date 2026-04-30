@@ -29,8 +29,6 @@ const io = new Server(server, {
 // Attach io to app for use in controllers
 app.set('io', io);
 
-// Connect to MongoDB
-connectDB();
 
 // ─── Security Middleware ────────────────────────────────────────────────────
 app.use(helmet());
@@ -90,12 +88,17 @@ io.on('connection', (socket) => {
   console.log(`🔌 Client connected: ${socket.id}`);
 
   socket.on('join-project', (projectId) => {
-    socket.join(`project:${projectId}`);
+    socket.join(projectId); // Use raw ID for simplicity as used in controllers
     console.log(`Socket ${socket.id} joined project:${projectId}`);
   });
 
+  socket.on('join-user', (userId) => {
+    socket.join(userId);
+    console.log(`Socket ${socket.id} joined user:${userId}`);
+  });
+
   socket.on('leave-project', (projectId) => {
-    socket.leave(`project:${projectId}`);
+    socket.leave(projectId);
   });
 
   socket.on('task-updated', (data) => {
@@ -109,10 +112,21 @@ io.on('connection', (socket) => {
 
 // ─── Start Server ────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`\n🚀 Server running on port ${PORT} [${process.env.NODE_ENV}]`);
-  console.log(`📡 Socket.io enabled`);
-  console.log(`🌐 API: http://localhost:${PORT}/api\n`);
-});
+
+const startServer = async () => {
+  try {
+    await connectDB();
+    server.listen(PORT, () => {
+      console.log(`\n🚀 Server running on port ${PORT} [${process.env.NODE_ENV}]`);
+      console.log(`📡 Socket.io enabled`);
+      console.log(`🌐 API: http://localhost:${PORT}/api\n`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error.message);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 module.exports = { app, server };

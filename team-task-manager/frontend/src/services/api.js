@@ -39,6 +39,7 @@ export const authService = {
   register: (data) => API.post('/auth/register', data),
   getProfile: () => API.get('/auth/profile'),
   updateProfile: (data) => API.put('/auth/profile', data),
+  changePassword: (data) => API.put('/auth/change-password', data),
 };
 
 // Project Services

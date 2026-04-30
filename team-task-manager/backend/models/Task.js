@@ -34,12 +34,20 @@ const taskSchema = new mongoose.Schema(
       },
     ],
     comments: [commentSchema],
+    activity: [
+      {
+        user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        action: { type: String, required: true },
+        details: { type: String },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );
 
 // Set completedAt when status changes to completed
-taskSchema.pre('save', function (next) {
+taskSchema.pre('save', async function () {
   if (this.isModified('status')) {
     if (this.status === 'completed' && !this.completedAt) {
       this.completedAt = new Date();
@@ -47,7 +55,6 @@ taskSchema.pre('save', function (next) {
       this.completedAt = undefined;
     }
   }
-  next();
 });
 
 // Virtual: isOverdue

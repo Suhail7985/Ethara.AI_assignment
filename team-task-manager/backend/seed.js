@@ -16,80 +16,163 @@ const seedData = async () => {
 
     console.log('Cleared existing data.');
 
-    // Create Admin
+    // Create Users
     const admin = await User.create({
-      name: 'Demo Admin',
+      name: 'Sarah Chen',
       email: 'admin@demo.com',
       password: '123456',
       role: 'admin',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop'
     });
 
-    // Create Member
-    const member = await User.create({
-      name: 'Demo Member',
+    const leadDev = await User.create({
+      name: 'James Wilson',
+      email: 'james@demo.com',
+      password: '123456',
+      role: 'member',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop'
+    });
+
+    const designer = await User.create({
+      name: 'Elena Rodriguez',
       email: 'user@demo.com',
       password: '123456',
       role: 'member',
+      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop'
     });
 
-    console.log('Created users.');
+    const qa = await User.create({
+      name: 'David Kim',
+      email: 'david@demo.com',
+      password: '123456',
+      role: 'member',
+      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop'
+    });
+
+    console.log('Created professional team.');
 
     // Create Projects
     const project1 = await Project.create({
-      name: 'Website Redesign',
-      description: 'Major overhaul of our corporate website with a modern aesthetic.',
+      name: 'Ethara AI Dashboard',
+      description: 'Building the next-gen AI analytics platform with real-time visualization.',
       owner: admin._id,
-      members: [member._id],
+      members: [leadDev._id, designer._id, qa._id],
       color: '#6366f1',
-      deadline: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+      deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+      tags: ['AI', 'Analytics', 'Enterprise']
     });
 
     const project2 = await Project.create({
-      name: 'Mobile App V2',
-      description: 'Developing the second version of our mobile application.',
+      name: 'Mobile Health Tracker',
+      description: 'Cross-platform mobile app for tracking daily health metrics and fitness.',
       owner: admin._id,
-      members: [member._id],
+      members: [leadDev._id, designer._id],
       color: '#10b981',
       deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      tags: ['Mobile', 'Health', 'V2']
     });
 
-    console.log('Created projects.');
+    const project3 = await Project.create({
+      name: 'Cloud Infrastructure Migration',
+      description: 'Transitioning our legacy servers to a serverless AWS architecture.',
+      owner: admin._id,
+      members: [leadDev._id, qa._id],
+      color: '#f59e0b',
+      deadline: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000),
+      tags: ['DevOps', 'AWS', 'Security']
+    });
+
+    console.log('Created strategic projects.');
 
     // Create Tasks
     await Task.create([
+      // Project 1 Tasks
       {
-        title: 'Design Hero Section',
-        description: 'Create a high-fidelity mockup for the landing page hero.',
+        title: 'Design System Implementation',
+        description: 'Create a reusable component library based on the new brand guidelines.',
         project: project1._id,
-        assignedTo: member._id,
+        assignedTo: designer._id,
+        createdBy: admin._id,
+        status: 'completed',
+        priority: 'high',
+        dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        tags: ['Design', 'UI'],
+        activity: [{ user: admin._id, action: 'created', details: 'Initial planning' }]
+      },
+      {
+        title: 'Integrate OpenAI API',
+        description: 'Connect the backend to GPT-4 for automated summary generation.',
+        project: project1._id,
+        assignedTo: leadDev._id,
         createdBy: admin._id,
         status: 'in-progress',
         priority: 'high',
-        dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+        dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        tags: ['Backend', 'AI'],
+        activity: [{ user: admin._id, action: 'created', details: 'Complex integration' }]
       },
       {
-        title: 'API Documentation',
-        description: 'Document all public endpoints for the mobile team.',
-        project: project2._id,
+        title: 'User Feedback Survey',
+        description: 'Gather feedback from beta testers on the new dashboard layout.',
+        project: project1._id,
         assignedTo: admin._id,
         createdBy: admin._id,
         status: 'todo',
         priority: 'medium',
-        dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        tags: ['UX', 'Research']
       },
+      // Project 2 Tasks
       {
-        title: 'Database Schema Design',
-        description: 'Finalize the Mongoose models for the core entities.',
-        project: project1._id,
-        assignedTo: admin._id,
+        title: 'Flutter Environment Setup',
+        description: 'Set up the development environment for the mobile team.',
+        project: project2._id,
+        assignedTo: leadDev._id,
         createdBy: admin._id,
         status: 'completed',
+        priority: 'medium',
+        dueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        completedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+        tags: ['Mobile', 'Dev']
+      },
+      {
+        title: 'Dark Mode Support',
+        description: 'Implement dark theme throughout the mobile application.',
+        project: project2._id,
+        assignedTo: designer._id,
+        createdBy: admin._id,
+        status: 'review',
+        priority: 'low',
+        dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+        tags: ['UI', 'Styling']
+      },
+      // Project 3 Tasks
+      {
+        title: 'Security Audit',
+        description: 'Perform a comprehensive security scan of all cloud endpoints.',
+        project: project3._id,
+        assignedTo: qa._id,
+        createdBy: admin._id,
+        status: 'todo',
         priority: 'high',
-        completedAt: new Date(),
+        dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+        tags: ['Security', 'Cloud']
+      },
+      {
+        title: 'Terraform Scripts',
+        description: 'Write IaC scripts for automated infrastructure deployment.',
+        project: project3._id,
+        assignedTo: leadDev._id,
+        createdBy: admin._id,
+        status: 'in-progress',
+        priority: 'high',
+        dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+        tags: ['DevOps', 'AWS']
       }
     ]);
 
-    console.log('Created tasks.');
+    console.log('Created 7 professional tasks.');
     console.log('✅ Seeding completed successfully!');
     process.exit(0);
   } catch (error) {

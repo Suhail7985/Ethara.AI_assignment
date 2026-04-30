@@ -16,6 +16,7 @@ import Tasks from './pages/Tasks';
 import Kanban from './pages/Kanban';
 import Team from './pages/Team';
 import Settings from './pages/Settings';
+import Landing from './pages/Landing';
 import NotFound from './pages/NotFound';
 
 const queryClient = new QueryClient({
@@ -38,11 +39,16 @@ const AdminRoute = ({ children }) => {
 };
 
 function App() {
+  const { isAuthenticated } = useAuthStore();
+
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
         <Toaster position="top-right" />
         <Routes>
+          {/* Public Landing Page */}
+          <Route path="/" element={<Landing />} />
+
           {/* Auth Routes */}
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<Login />} />
@@ -51,7 +57,6 @@ function App() {
 
           {/* App Routes */}
           <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/tasks" element={<Tasks />} />

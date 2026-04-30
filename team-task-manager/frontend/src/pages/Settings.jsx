@@ -2,13 +2,11 @@ import { useState } from 'react';
 import { 
   User, 
   Lock, 
-  Bell, 
   Shield, 
-  Globe, 
-  Palette, 
-  CreditCard,
   CheckCircle2,
-  Loader2
+  Loader2,
+  Edit,
+  UserPlus
 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 import { authService } from '../services/api';
@@ -25,6 +23,12 @@ const Settings = () => {
     avatar: user?.avatar || ''
   });
 
+  const [securityData, setSecurityData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -33,7 +37,27 @@ const Settings = () => {
       updateUser(res.data.user);
       toast.success('Profile updated successfully');
     } catch (err) {
-      toast.error('Failed to update profile');
+      toast.error(err.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    if (securityData.newPassword !== securityData.confirmPassword) {
+      return toast.error('Passwords do not match');
+    }
+    setIsLoading(true);
+    try {
+      await authService.changePassword({
+        currentPassword: securityData.currentPassword,
+        newPassword: securityData.newPassword
+      });
+      toast.success('Password changed successfully');
+      setSecurityData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to change password');
     } finally {
       setIsLoading(false);
     }
@@ -42,10 +66,10 @@ const Settings = () => {
   const tabs = [
     { id: 'profile', name: 'Profile', icon: User },
     { id: 'security', name: 'Security', icon: Lock },
-    { id: 'notifications', name: 'Notifications', icon: Bell },
-    { id: 'team', name: 'Team Access', icon: Shield },
-    { id: 'billing', name: 'Billing', icon: CreditCard },
+    { id: 'team', name: 'Team Access', icon: Shield, adminOnly: true },
   ];
+
+  const filteredTabs = tabs.filter(tab => !tab.adminOnly || user?.role === 'admin');
 
   return (
     <div className="space-y-6">
@@ -55,7 +79,7 @@ const Settings = () => {
         {/* Sidebar Tabs */}
         <div className="lg:w-64 flex-shrink-0">
           <nav className="space-y-1">
-            {tabs.map((tab) => (
+            {filteredTabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -81,19 +105,54 @@ const Settings = () => {
               <form onSubmit={handleProfileUpdate} className="space-y-6 max-w-2xl">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                   <div className="relative group">
-                    <div className="w-24 h-24 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-3xl font-bold text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-700">
-                      {profileData.avatar ? <img src={profileData.avatar} className="w-full h-full rounded-2xl object-cover" /> : profileData.name.charAt(0)}
+                    <div className="w-24 h-24 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-3xl font-bold text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-700 overflow-hidden">
+                      {profileData.avatar ? (
+                        <img src={profileData.avatar} className="w-full h-full object-cover" alt="Profile" />
+                      ) : (
+                        profileData.name?.charAt(0)
+                      )}
                     </div>
-                    <button type="button" className="absolute -bottom-2 -right-2 p-1.5 bg-primary-600 text-white rounded-lg shadow-lg hover:scale-110 transition-transform">
+                    <label 
+                      htmlFor="avatar-upload"
+                      className="absolute -bottom-2 -right-2 p-1.5 bg-primary-600 text-white rounded-lg shadow-lg hover:scale-110 transition-transform cursor-pointer"
+                    >
                       <Edit className="w-4 h-4" />
-                    </button>
+                    </label>
+                    <input 
+                      id="avatar-upload"
+                      type="file" 
+                      accept="image/*"
+                      className="hidden" 
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          if (file.size > 2 * 1024 * 1024) return toast.error('Image must be under 2MB');
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setProfileData({ ...profileData, avatar: reader.result });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
                   </div>
                   <div>
                     <h4 className="font-bold dark:text-white">Profile Photo</h4>
                     <p className="text-xs text-slate-500 mt-1">PNG, JPG or GIF. Max 2MB.</p>
                     <div className="flex gap-2 mt-3">
-                      <button type="button" className="text-xs font-bold text-primary-600 hover:underline">Upload new</button>
-                      <button type="button" className="text-xs font-bold text-red-500 hover:underline">Remove</button>
+                      <label 
+                        htmlFor="avatar-upload"
+                        className="text-xs font-bold text-primary-600 hover:underline cursor-pointer"
+                      >
+                        Upload new
+                      </label>
+                      <button 
+                        type="button" 
+                        onClick={() => setProfileData({ ...profileData, avatar: '' })}
+                        className="text-xs font-bold text-red-500 hover:underline"
+                      >
+                        Remove
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -133,7 +192,114 @@ const Settings = () => {
             </div>
           )}
 
-          {activeTab !== 'profile' && (
+          {activeTab === 'security' && (
+            <div className="p-6 md:p-8 animate-fade-in">
+              <h2 className="text-lg font-bold dark:text-white mb-6">Security Settings</h2>
+              
+              <form onSubmit={handlePasswordChange} className="space-y-6 max-w-md">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Current Password</label>
+                  <input 
+                    type="password" 
+                    className="input-field" 
+                    required
+                    value={securityData.currentPassword}
+                    onChange={(e) => setSecurityData({...securityData, currentPassword: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">New Password</label>
+                  <input 
+                    type="password" 
+                    className="input-field" 
+                    required
+                    minLength={6}
+                    value={securityData.newPassword}
+                    onChange={(e) => setSecurityData({...securityData, newPassword: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Confirm New Password</label>
+                  <input 
+                    type="password" 
+                    className="input-field" 
+                    required
+                    value={securityData.confirmPassword}
+                    onChange={(e) => setSecurityData({...securityData, confirmPassword: e.target.value})}
+                  />
+                </div>
+
+                <div className="pt-6 border-t border-slate-50 dark:border-slate-800">
+                  <button 
+                    type="submit" 
+                    disabled={isLoading}
+                    className="btn-primary flex items-center gap-2"
+                  >
+                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
+                    Update Password
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {activeTab === 'team' && user?.role === 'admin' && (
+            <div className="p-6 md:p-8 animate-fade-in">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold dark:text-white">Team Management</h2>
+                <button className="btn-primary text-xs flex items-center gap-2">
+                  <UserPlus className="w-3.5 h-3.5" />
+                  Invite Member
+                </button>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="text-[10px] uppercase font-bold text-slate-500 border-b border-slate-100 dark:border-slate-800">
+                      <th className="px-4 py-3">Member</th>
+                      <th className="px-4 py-3">Role</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {/* This would normally fetch from API, for now we show a placeholder or the user themselves */}
+                    <tr className="text-sm">
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center font-bold text-primary-700 text-xs">
+                            {user.name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-semibold dark:text-white">{user.name} (You)</p>
+                            <p className="text-xs text-slate-500">{user.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-primary-600">
+                          {user.role}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="flex items-center gap-1.5 text-emerald-600 font-medium text-xs">
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                          Active
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        <button className="text-slate-400 hover:text-slate-600"><Edit className="w-4 h-4" /></button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-6 text-xs text-slate-500 italic">Note: Full team management is available in the dedicated Team section.</p>
+            </div>
+          )}
+
+          {activeTab !== 'profile' && activeTab !== 'security' && activeTab !== 'team' && (
             <div className="p-20 text-center flex flex-col items-center justify-center animate-fade-in">
               <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
                 <Palette className="w-8 h-8 text-slate-300" />

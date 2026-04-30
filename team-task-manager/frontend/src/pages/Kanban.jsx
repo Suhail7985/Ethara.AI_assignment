@@ -9,14 +9,44 @@ import {
   Paperclip,
   Loader2,
   Filter,
-  Search
+  Search,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import { taskService, projectService } from '../services/api';
 import { toast } from 'react-hot-toast';
+import TaskModal from '../components/TaskModal';
+import socketService from '../services/socket';
+import useAuthStore from '../store/useAuthStore';
 
 const Kanban = () => {
+  const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [projectId, setProjectId] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [defaultStatus, setDefaultStatus] = useState('todo');
+
+  useEffect(() => {
+    if (projectId) {
+      socketService.joinProject(projectId);
+
+      socketService.on('taskUpdate', (data) => {
+        // Refresh kanban data
+        queryClient.invalidateQueries(['tasks', { project: projectId }]);
+        if (data.action === 'comment') {
+          queryClient.invalidateQueries(['task', data.taskId]);
+        }
+      });
+    }
+
+    return () => {
+      if (projectId) {
+        socketService.leaveProject(projectId);
+        socketService.off('taskUpdate');
+      }
+    };
+  }, [projectId, queryClient]);
   
   const { data: projects } = useQuery({
     queryKey: ['projects'],
@@ -26,14 +56,38 @@ const Kanban = () => {
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['tasks', { project: projectId }],
     queryFn: () => taskService.getTasks({ project: projectId }).then(res => res.data.data),
-    enabled: true,
+  });
+
+  const createTaskMutation = useMutation({
+    mutationFn: (data) => taskService.createTask(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['tasks']);
+      toast.success('Task created successfully');
+      setIsModalOpen(false);
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Failed to create task');
+    }
   });
 
   const updateTaskMutation = useMutation({
-    mutationFn: ({ id, status }) => taskService.updateTask(id, { status }),
+    mutationFn: ({ id, ...data }) => taskService.updateTask(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries(['tasks']);
-      toast.success('Task status updated');
+      toast.success('Task updated');
+      setIsModalOpen(false);
+      setSelectedTask(null);
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Failed to update task');
+    }
+  });
+
+  const deleteTaskMutation = useMutation({
+    mutationFn: (id) => taskService.deleteTask(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['tasks']);
+      toast.success('Task deleted');
     },
   });
 
@@ -58,6 +112,43 @@ const Kanban = () => {
     if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
     updateTaskMutation.mutate({ id: draggableId, status: destination.droppableId });
+  };
+
+  const handleCreate = (status = 'todo') => {
+    setDefaultStatus(status);
+    setSelectedTask(null);
+    setIsModalOpen(true);
+  };
+
+  const isAdmin = user?.role === 'admin';
+
+  const canEdit = (task) => {
+    return isAdmin || task.createdBy?._id === user?._id || task.createdBy === user?._id || task.assignedTo?._id === user?._id || task.assignedTo === user?._id;
+  };
+
+  const canDelete = (task) => {
+    return isAdmin || task.createdBy?._id === user?._id || task.createdBy === user?._id;
+  };
+
+  const handleEdit = (task) => {
+    if (!canEdit(task)) return toast.error('You do not have permission to edit this task');
+    setSelectedTask(task);
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = (data) => {
+    if (selectedTask) {
+      updateTaskMutation.mutate({ id: selectedTask._id, ...data });
+    } else {
+      createTaskMutation.mutate(data);
+    }
+  };
+
+  const handleDelete = (id, task) => {
+    if (!canDelete(task)) return toast.error('You do not have permission to delete this task');
+    if (window.confirm('Delete this task?')) {
+      deleteTaskMutation.mutate(id);
+    }
   };
 
   const PriorityBadge = ({ priority }) => {
@@ -92,9 +183,12 @@ const Kanban = () => {
               <option key={p._id} value={p._id}>{p.name}</option>
             ))}
           </select>
-          <button className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 transition-colors">
-            <Filter className="w-4 h-4 text-slate-500" />
-          </button>
+          {isAdmin && (
+            <button onClick={() => handleCreate()} className="btn-primary py-1.5 flex items-center gap-2 text-sm">
+              <Plus className="w-4 h-4" />
+              New Task
+            </button>
+          )}
         </div>
       </div>
 
@@ -115,9 +209,14 @@ const Kanban = () => {
                         {column.tasks.length}
                       </span>
                     </div>
-                    <button className="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded">
-                      <Plus className="w-4 h-4 text-slate-400" />
-                    </button>
+                    {isAdmin && (
+                      <button 
+                        onClick={() => handleCreate(column.id)}
+                        className="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded transition-colors"
+                      >
+                        <Plus className="w-4 h-4 text-slate-400" />
+                      </button>
+                    )}
                   </div>
 
                   <Droppable droppableId={column.id}>
@@ -138,9 +237,24 @@ const Kanban = () => {
                               >
                                 <div className="flex items-start justify-between gap-2 mb-2">
                                   <PriorityBadge priority={task.priority} />
-                                  <button className="text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <MoreVertical className="w-4 h-4" />
-                                  </button>
+                                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    {canEdit(task) && (
+                                      <button 
+                                        onClick={() => handleEdit(task)}
+                                        className="p-1 text-slate-400 hover:text-primary-600"
+                                      >
+                                        <Edit className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                    {canDelete(task) && (
+                                      <button 
+                                        onClick={() => handleDelete(task._id, task)}
+                                        className="p-1 text-slate-400 hover:text-red-600"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
                                 <h4 className="font-semibold text-sm mb-2 dark:text-white line-clamp-2">
                                   {task.title}
@@ -170,7 +284,7 @@ const Kanban = () => {
                                         {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                       </div>
                                     )}
-                                    <div className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center text-[10px] font-bold text-primary-700">
+                                    <div title={task.assignedTo?.name} className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center text-[10px] font-bold text-primary-700">
                                       {task.assignedTo?.name?.charAt(0) || '?'}
                                     </div>
                                   </div>
@@ -189,6 +303,15 @@ const Kanban = () => {
           </div>
         </DragDropContext>
       )}
+
+      <TaskModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleSubmit}
+        initialData={selectedTask}
+        defaultProjectId={projectId}
+        isLoading={createTaskMutation.isPending || updateTaskMutation.isPending}
+      />
     </div>
   );
 };

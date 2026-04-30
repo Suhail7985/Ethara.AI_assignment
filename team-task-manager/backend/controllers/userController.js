@@ -132,7 +132,14 @@ const getAnalytics = async (req, res, next) => {
     const projects = await Project.find(projectFilter).select('_id status');
     const projectIds = projects.map((p) => p._id);
 
-    const taskFilter = isAdmin ? {} : { project: { $in: projectIds } };
+    const taskFilter = isAdmin 
+      ? {} 
+      : { 
+          $or: [
+            { project: { $in: projectIds } }, 
+            { assignedTo: userId }
+          ] 
+        };
 
     const [totalProjects, taskStats, recentTasks, overdueCount] = await Promise.all([
       Project.countDocuments(projectFilter),
@@ -145,10 +152,11 @@ const getAnalytics = async (req, res, next) => {
           },
         },
       ]),
-      Task.find({ ...taskFilter, assignedTo: userId })
+      Task.find(isAdmin ? taskFilter : { ...taskFilter, assignedTo: userId })
         .sort({ updatedAt: -1 })
         .limit(5)
-        .populate('project', 'name color'),
+        .populate('project', 'name color')
+        .populate('assignedTo', 'name'), // Exclude avatar from analytics tasks
       Task.countDocuments({
         ...taskFilter,
         dueDate: { $lt: new Date() },
@@ -175,6 +183,33 @@ const getAnalytics = async (req, res, next) => {
       },
     ]);
 
+    // Team workload (active tasks per user)
+    const teamWorkload = await Task.aggregate([
+      { $match: { ...taskFilter, status: { $ne: 'completed' }, assignedTo: { $exists: true, $ne: null } } },
+      {
+        $group: {
+          _id: '$assignedTo',
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      { $unwind: '$user' },
+      {
+        $project: {
+          name: '$user.name',
+          count: 1
+          // Exclude avatar from workload aggregation
+        }
+      }
+    ]);
+
     const statusMap = {};
     taskStats.forEach((s) => (statusMap[s._id] = s.count));
     const totalTasks = Object.values(statusMap).reduce((a, b) => a + b, 0);
@@ -195,6 +230,7 @@ const getAnalytics = async (req, res, next) => {
         taskStatusBreakdown: taskStats,
         weeklyCompleted,
         recentTasks,
+        teamWorkload
       },
     });
   } catch (err) {

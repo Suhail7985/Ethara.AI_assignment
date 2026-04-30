@@ -81,6 +81,16 @@ const Dashboard = () => {
     </div>
   );
 
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weeklyData = days.map((day, index) => {
+    // MongoDB $dayOfWeek returns 1 for Sunday, 2 for Monday, etc.
+    const found = analytics?.weeklyCompleted?.find(w => w._id === index + 1);
+    return {
+      name: day,
+      tasks: found ? found.count : 0
+    };
+  });
+
   return (
     <div className="space-y-8 pb-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -113,7 +123,7 @@ const Dashboard = () => {
         />
         <StatCard 
           title="Pending" 
-          value={analytics?.todo + analytics?.inProgress + analytics?.review || 0} 
+          value={(analytics?.todo || 0) + (analytics?.inProgress || 0) + (analytics?.review || 0)} 
           icon={Clock} 
           color="amber"
         />
@@ -139,15 +149,7 @@ const Dashboard = () => {
           </div>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={[
-                { name: 'Mon', tasks: 12 },
-                { name: 'Tue', tasks: 19 },
-                { name: 'Wed', tasks: 15 },
-                { name: 'Thu', tasks: 22 },
-                { name: 'Fri', tasks: 18 },
-                { name: 'Sat', tasks: 8 },
-                { name: 'Sun', tasks: 5 },
-              ]}>
+              <BarChart data={weeklyData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
@@ -267,6 +269,41 @@ const Dashboard = () => {
               You've completed <span className="font-bold text-primary-600">{analytics?.completed}</span> tasks this week. Keep the momentum going!
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Team Workload */}
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
+        <h3 className="font-bold text-lg mb-6 dark:text-white">Team Workload</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {analytics?.teamWorkload?.map((member) => (
+            <div key={member._id} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                  {member.avatar ? (
+                    <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-sm font-bold text-slate-500">
+                      {member.name.charAt(0)}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold dark:text-white truncate max-w-[120px]">{member.name}</h4>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{member.count} Active Tasks</p>
+                </div>
+              </div>
+              <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-primary-500 transition-all duration-500" 
+                  style={{ width: `${Math.min((member.count / 5) * 100, 100)}%` }}
+                ></div>
+              </div>
+            </div>
+          ))}
+          {(!analytics?.teamWorkload || analytics.teamWorkload.length === 0) && (
+            <div className="col-span-full py-10 text-center text-slate-400 italic">No active workload data.</div>
+          )}
         </div>
       </div>
     </div>

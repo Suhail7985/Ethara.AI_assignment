@@ -31,13 +31,25 @@ const getTasks = async (req, res, next) => {
       query.status = { $ne: 'completed' };
     }
 
-    // If not admin, only show tasks from accessible projects
+    // If not admin, only show tasks from accessible projects OR tasks assigned to me
     if (req.user.role !== 'admin') {
       const accessibleProjects = await Project.find({
         $or: [{ owner: req.user._id }, { members: req.user._id }],
       }).select('_id');
-      const ids = accessibleProjects.map((p) => p._id);
-      if (!project) query.project = { $in: ids };
+      const projectIds = accessibleProjects.map((p) => p._id);
+
+      if (project) {
+        // If searching specific project, it must be accessible
+        if (!projectIds.map(String).includes(String(project))) {
+          query.assignedTo = req.user._id; // Fallback to only seeing my tasks in that project if not a member
+        }
+      } else {
+        // Broad search: see all tasks in accessible projects + any tasks assigned to me
+        query.$or = [
+          { project: { $in: projectIds } },
+          { assignedTo: req.user._id }
+        ];
+      }
     }
 
     const skip = (page - 1) * limit;
@@ -85,6 +97,7 @@ const getTask = async (req, res, next) => {
 // @route   POST /api/tasks
 const createTask = async (req, res, next) => {
   try {
+    if (req.body.assignedTo === '') delete req.body.assignedTo;
     const { title, description, project, assignedTo, status, priority, dueDate, tags, order } = req.body;
 
     const access = await checkProjectAccess(project, req.user);
@@ -93,6 +106,11 @@ const createTask = async (req, res, next) => {
     const task = await Task.create({
       title, description, project, assignedTo, status, priority, dueDate, tags, order,
       createdBy: req.user._id,
+      activity: [{
+        user: req.user._id,
+        action: 'created',
+        details: 'Initial task creation'
+      }]
     });
 
     await task.populate('assignedTo', 'name email avatar');
@@ -104,11 +122,20 @@ const createTask = async (req, res, next) => {
       await User.findByIdAndUpdate(assignedTo, {
         $push: {
           notifications: {
-            message: `You've been assigned task "${title}"`,
+            message: `${req.user.name} assigned you a task: "${title}"`,
             type: 'info',
           },
         },
       });
+      
+      const io = req.app.get('io');
+      if (io) {
+        io.to(assignedTo).emit('notification', {
+          message: `${req.user.name} assigned you a task: "${title}"`,
+          type: 'info',
+          createdAt: new Date()
+        });
+      }
     }
 
     res.status(201).json({ success: true, message: 'Task created.', data: task });
@@ -121,12 +148,14 @@ const createTask = async (req, res, next) => {
 // @route   PUT /api/tasks/:id
 const updateTask = async (req, res, next) => {
   try {
+    if (req.body.assignedTo === '') req.body.assignedTo = null;
     const task = await Task.findById(req.params.id);
     if (!task) return res.status(404).json({ success: false, message: 'Task not found.' });
 
     // Members can only update tasks assigned to them; admins and project owners can update all
     const isAssigned = task.assignedTo?.toString() === req.user._id.toString();
     const isCreator = task.createdBy.toString() === req.user._id.toString();
+    
     if (req.user.role !== 'admin' && !isAssigned && !isCreator) {
       // Check project ownership
       const project = await Project.findById(task.project);
@@ -136,18 +165,65 @@ const updateTask = async (req, res, next) => {
       }
     }
 
-    // Handle status change for completedAt
-    if (req.body.status === 'completed' && task.status !== 'completed') {
-      req.body.completedAt = new Date();
-    } else if (req.body.status && req.body.status !== 'completed') {
-      req.body.completedAt = null;
+    // Role-based Assignment check: Members cannot assign tasks to others
+    if (req.user.role !== 'admin' && req.body.assignedTo && req.body.assignedTo !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Members can only assign tasks to themselves.' });
     }
 
-    const updated = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
+    // Prepare activity logs
+    const activityLog = [];
+    if (req.body.status && req.body.status !== task.status) {
+      activityLog.push({
+        user: req.user._id,
+        action: 'status_change',
+        details: `Moved from ${task.status} to ${req.body.status}`
+      });
+    }
+    if (req.body.assignedTo !== undefined && String(req.body.assignedTo) !== String(task.assignedTo)) {
+      activityLog.push({
+        user: req.user._id,
+        action: 'assignment',
+        details: req.body.assignedTo ? 'Reassigned task' : 'Unassigned task'
+      });
+    }
+
+    const updateData = { ...req.body };
+    
+    // Handle status change for completedAt
+    if (req.body.status === 'completed' && task.status !== 'completed') {
+      updateData.completedAt = new Date();
+    } else if (req.body.status && req.body.status !== 'completed') {
+      updateData.completedAt = null;
+    }
+
+    if (activityLog.length > 0) {
+      updateData.$push = { activity: { $each: activityLog } };
+    }
+
+    const updated = await Task.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true })
       .populate('assignedTo', 'name email avatar')
       .populate('createdBy', 'name email avatar')
       .populate('project', 'name color')
-      .populate('comments.user', 'name avatar');
+      .populate('comments.user', 'name avatar')
+      .populate('activity.user', 'name avatar');
+
+    const io = req.app.get('io');
+    if (io) {
+      // Notify the project room about the update
+      io.to(updated.project._id.toString()).emit('taskUpdate', {
+        action: 'updated',
+        task: updated
+      });
+
+      // If status changed to completed, notify the creator
+      if (req.body.status === 'completed' && task.status !== 'completed' && updated.createdBy._id.toString() !== req.user._id.toString()) {
+        io.to(updated.createdBy._id.toString()).emit('notification', {
+          message: `${req.user.name} completed task: "${updated.title}"`,
+          type: 'success',
+          createdAt: new Date()
+        });
+      }
+    }
 
     res.json({ success: true, message: 'Task updated.', data: updated });
   } catch (err) {
@@ -185,6 +261,15 @@ const addComment = async (req, res, next) => {
     task.comments.push({ user: req.user._id, text });
     await task.save();
     await task.populate('comments.user', 'name avatar');
+
+    const io = req.app.get('io');
+    if (io) {
+      io.to(task.project.toString()).emit('taskUpdate', {
+        action: 'comment',
+        taskId: task._id,
+        comment: task.comments[task.comments.length - 1]
+      });
+    }
 
     res.status(201).json({ success: true, message: 'Comment added.', data: task.comments });
   } catch (err) {

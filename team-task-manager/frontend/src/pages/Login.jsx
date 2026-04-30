@@ -22,6 +22,7 @@ const Login = () => {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(loginSchema),
@@ -146,14 +147,24 @@ const Login = () => {
 
       <div className="grid grid-cols-2 gap-3 mt-4">
         <button 
-          onClick={() => {}} 
+          type="button"
+          onClick={() => {
+            setValue('email', 'admin@demo.com');
+            setValue('password', '123456');
+            handleSubmit(onSubmit)();
+          }} 
           className="flex flex-col items-center p-3 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all group"
         >
           <span className="text-xs font-bold text-slate-400 group-hover:text-primary-500">ADMIN</span>
           <span className="text-[10px] text-slate-500">admin@demo.com / 123456</span>
         </button>
         <button 
-          onClick={() => {}} 
+          type="button"
+          onClick={() => {
+            setValue('email', 'user@demo.com');
+            setValue('password', '123456');
+            handleSubmit(onSubmit)();
+          }} 
           className="flex flex-col items-center p-3 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all group"
         >
           <span className="text-xs font-bold text-slate-400 group-hover:text-primary-500">MEMBER</span>

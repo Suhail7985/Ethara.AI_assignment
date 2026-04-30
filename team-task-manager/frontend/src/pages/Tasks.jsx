@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { 
   CheckSquare, 
   Clock, 
@@ -8,17 +9,92 @@ import {
   Filter, 
   MoreVertical,
   ChevronDown,
-  Calendar
+  Calendar,
+  Plus,
+  Trash2,
+  Edit
 } from 'lucide-react';
 import { taskService } from '../services/api';
+import { toast } from 'react-hot-toast';
+import TaskModal from '../components/TaskModal';
+import useAuthStore from '../store/useAuthStore';
 
 const Tasks = () => {
-  const [filterStatus, setFilterStatus] = useState('');
+  const { user } = useAuthStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
+  const [filterStatus, setFilterStatus] = useState(searchParams.get('status') || '');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
   
   const { data: tasks, isLoading } = useQuery({
-    queryKey: ['tasks', { status: filterStatus }],
-    queryFn: () => taskService.getTasks({ status: filterStatus }).then(res => res.data.data),
+    queryKey: ['tasks', { status: filterStatus, search: searchTerm }],
+    queryFn: () => taskService.getTasks({ status: filterStatus, search: searchTerm }).then(res => res.data.data),
   });
+
+  const createTaskMutation = useMutation({
+    mutationFn: (data) => taskService.createTask(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['tasks']);
+      toast.success('Task created successfully');
+      setIsModalOpen(false);
+    },
+  });
+
+  const updateTaskMutation = useMutation({
+    mutationFn: ({ id, ...data }) => taskService.updateTask(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['tasks']);
+      toast.success('Task updated');
+      setIsModalOpen(false);
+      setSelectedTask(null);
+    },
+  });
+
+  const deleteTaskMutation = useMutation({
+    mutationFn: (id) => taskService.deleteTask(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['tasks']);
+      toast.success('Task deleted');
+    },
+  });
+
+  const isAdmin = user?.role === 'admin';
+
+  const canEdit = (task) => {
+    return isAdmin || task.createdBy?._id === user?._id || task.createdBy === user?._id || task.assignedTo?._id === user?._id || task.assignedTo === user?._id;
+  };
+
+  const canDelete = (task) => {
+    return isAdmin || task.createdBy?._id === user?._id || task.createdBy === user?._id;
+  };
+
+  const handleCreate = () => {
+    setSelectedTask(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (task) => {
+    if (!canEdit(task)) return toast.error('You do not have permission to edit this task');
+    setSelectedTask(task);
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = (data) => {
+    if (selectedTask) {
+      updateTaskMutation.mutate({ id: selectedTask._id, ...data });
+    } else {
+      createTaskMutation.mutate(data);
+    }
+  };
+
+  const handleDelete = (id, task) => {
+    if (!canDelete(task)) return toast.error('You do not have permission to delete this task');
+    if (window.confirm('Are you sure you want to delete this task?')) {
+      deleteTaskMutation.mutate(id);
+    }
+  };
 
   const getStatusStyle = (status) => {
     const styles = {
@@ -37,6 +113,13 @@ const Tasks = () => {
           <h1 className="text-2xl font-bold dark:text-white">Tasks</h1>
           <p className="text-slate-500 text-sm mt-1">View and manage all your assigned tasks.</p>
         </div>
+        
+        {isAdmin && (
+          <button onClick={handleCreate} className="btn-primary flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            New Task
+          </button>
+        )}
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">
@@ -70,7 +153,16 @@ const Tasks = () => {
           
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input type="text" placeholder="Filter tasks..." className="input-field py-1.5 pl-10 text-sm w-full sm:w-64" />
+            <input 
+              type="text" 
+              placeholder="Filter tasks..." 
+              className="input-field py-1.5 pl-10 text-sm w-full sm:w-64" 
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setSearchParams({ search: e.target.value, status: filterStatus });
+              }}
+            />
           </div>
         </div>
 
@@ -126,14 +218,29 @@ const Tasks = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-[10px] font-bold text-primary-700 border border-primary-200">
+                    <div title={task.assignedTo?.name} className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-[10px] font-bold text-primary-700 border border-primary-200">
                       {task.assignedTo?.name?.charAt(0) || '?'}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                      <MoreVertical className="w-4 h-4 text-slate-400" />
-                    </button>
+                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {canEdit(task) && (
+                        <button 
+                          onClick={() => handleEdit(task)}
+                          className="p-1 text-slate-400 hover:text-primary-600 transition-colors"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                      )}
+                      {canDelete(task) && (
+                        <button 
+                          onClick={() => handleDelete(task._id, task)}
+                          className="p-1 text-slate-400 hover:text-red-600 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -148,6 +255,14 @@ const Tasks = () => {
           </table>
         </div>
       </div>
+
+      <TaskModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleSubmit}
+        initialData={selectedTask}
+        isLoading={createTaskMutation.isPending || updateTaskMutation.isPending}
+      />
     </div>
   );
 };

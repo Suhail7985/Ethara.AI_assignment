@@ -10,15 +10,93 @@ import {
   Trash2,
   Edit,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  X
 } from 'lucide-react';
 import { userService } from '../services/api';
 import { toast } from 'react-hot-toast';
+import useAuthStore from '../store/useAuthStore';
+
+const UserModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = false }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    role: 'member',
+    isActive: true
+  });
+
+  useState(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name || '',
+        role: initialData.role || 'member',
+        isActive: initialData.isActive !== undefined ? initialData.isActive : true
+      });
+    }
+  }, [initialData]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-slide-up border border-slate-100 dark:border-slate-800">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold dark:text-white">Edit Team Member</h3>
+            <button onClick={onClose}><X className="w-5 h-5 text-slate-400" /></button>
+          </div>
+          
+          <form onSubmit={(e) => { e.preventDefault(); onSubmit(formData); }} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
+              <input 
+                type="text" 
+                required
+                className="input-field" 
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Role</label>
+              <select 
+                className="input-field"
+                value={formData.role}
+                onChange={(e) => setFormData({...formData, role: e.target.value})}
+              >
+                <option value="member">Member</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <input 
+                type="checkbox" 
+                id="isActive"
+                checked={formData.isActive}
+                onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
+                className="w-4 h-4 text-primary-600 rounded border-slate-300"
+              />
+              <label htmlFor="isActive" className="text-sm font-medium text-slate-700 dark:text-slate-300">Active Account</label>
+            </div>
+            
+            <div className="flex gap-3 pt-2">
+              <button type="button" onClick={onClose} className="flex-1 btn-secondary">Cancel</button>
+              <button type="submit" disabled={isLoading} className="flex-1 btn-primary flex items-center justify-center gap-2">
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Team = () => {
   const queryClient = useQueryClient();
+  const { user: currentUser } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('member');
 
@@ -40,9 +118,27 @@ const Team = () => {
     }
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, ...data }) => userService.updateUser(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['team']);
+      toast.success('User updated');
+      setSelectedUser(null);
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Update failed');
+    }
+  });
+
   const handleInvite = (e) => {
     e.preventDefault();
     inviteMutation.mutate({ email: inviteEmail, role: inviteRole });
+  };
+
+  const handleDeactivate = (id) => {
+    if (window.confirm('Are you sure you want to deactivate this user?')) {
+      updateMutation.mutate({ id, isActive: false });
+    }
   };
 
   return (
@@ -53,13 +149,15 @@ const Team = () => {
           <p className="text-slate-500 text-sm mt-1">Manage your organization's members and their access levels.</p>
         </div>
         
-        <button 
-          onClick={() => setIsInviteModalOpen(true)}
-          className="btn-primary flex items-center gap-2"
-        >
-          <UserPlus className="w-4 h-4" />
-          Invite Member
-        </button>
+        {currentUser?.role === 'admin' && (
+          <button 
+            onClick={() => setIsInviteModalOpen(true)}
+            className="btn-primary flex items-center gap-2"
+          >
+            <UserPlus className="w-4 h-4" />
+            Invite Member
+          </button>
+        )}
       </div>
 
       <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4 shadow-sm">
@@ -87,17 +185,27 @@ const Team = () => {
                 <div className="w-14 h-14 rounded-2xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-700 dark:text-primary-300 font-bold text-xl border border-primary-200 dark:border-primary-800">
                   {member.name?.charAt(0)}
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center">
-                  <CheckCircle2 className="w-3 h-3 text-white" />
-                </div>
+                {member.isActive && (
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center">
+                    <CheckCircle2 className="w-3 h-3 text-white" />
+                  </div>
+                )}
               </div>
-              <button className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-                <MoreVertical className="w-4 h-4" />
-              </button>
+              
+              {currentUser?.role === 'admin' && member._id !== currentUser._id && (
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => setSelectedUser(member)} className="p-1.5 text-slate-400 hover:text-primary-600 transition-colors">
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => handleDeactivate(member._id)} className="p-1.5 text-slate-400 hover:text-red-600 transition-colors">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="mt-4">
-              <h3 className="font-bold dark:text-white">{member.name}</h3>
+              <h3 className="font-bold dark:text-white">{member.name} {member._id === currentUser?._id && '(You)'}</h3>
               <div className="flex items-center gap-2 mt-1">
                 <Mail className="w-3 h-3 text-slate-400" />
                 <span className="text-xs text-slate-500 truncate">{member.email}</span>
@@ -128,7 +236,10 @@ const Team = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
           <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-slide-up border border-slate-100 dark:border-slate-800">
             <div className="p-6">
-              <h3 className="text-xl font-bold dark:text-white">Invite Team Member</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold dark:text-white">Invite Team Member</h3>
+                <button onClick={() => setIsInviteModalOpen(false)}><X className="w-5 h-5 text-slate-400" /></button>
+              </div>
               <p className="text-sm text-slate-500 mt-1">Send an invitation to join your organization.</p>
               
               <form onSubmit={handleInvite} className="mt-6 space-y-4">
@@ -176,6 +287,15 @@ const Team = () => {
           </div>
         </div>
       )}
+
+      {/* Edit User Modal */}
+      <UserModal 
+        isOpen={!!selectedUser}
+        onClose={() => setSelectedUser(null)}
+        initialData={selectedUser}
+        onSubmit={(data) => updateMutation.mutate({ id: selectedUser._id, ...data })}
+        isLoading={updateMutation.isPending}
+      />
     </div>
   );
 };
