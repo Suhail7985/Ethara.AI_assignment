@@ -151,13 +151,13 @@ const Landing = () => {
                 {isAuthenticated ? 'Return to Dashboard' : 'Get Started for Free'}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
-              <button className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+              <a href="#demo" className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
                 Watch Demo
-              </button>
+              </a>
             </div>
 
             {/* Dashboard Preview Mockup */}
-            <div className="mt-20 relative mx-auto max-w-5xl group">
+            <div id="demo" className="mt-20 relative mx-auto max-w-5xl group">
               <div className="absolute -inset-1 bg-gradient-to-r from-primary-600 to-indigo-600 rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
               <div className="relative bg-white dark:bg-slate-900 p-2 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-2xl shadow-slate-200 dark:shadow-none overflow-hidden">
                 <div className="bg-slate-50 dark:bg-slate-950 rounded-[2rem] aspect-[16/9] relative overflow-hidden border border-slate-200 dark:border-slate-800 p-4 sm:p-8">
@@ -322,6 +322,65 @@ const Landing = () => {
               </Link>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section id="about" className="py-32 px-6 bg-slate-900 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full opacity-10">
+          <div className="absolute top-10 left-10 w-64 h-64 bg-primary-500 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-10 right-10 w-64 h-64 bg-indigo-500 rounded-full blur-3xl"></div>
+        </div>
+        
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-primary-400 mb-4">Our Mission</h2>
+              <h3 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-8">
+                We're on a mission to help teams do their best work.
+              </h3>
+              <p className="text-lg text-slate-400 leading-relaxed mb-8">
+                TaskFlow was born out of a simple observation: most teams are overwhelmed by tools, not empowered by them. We've built a platform that strips away the noise and focuses on what matters—getting things done.
+              </p>
+              <div className="grid grid-cols-2 gap-8">
+                <div>
+                  <h4 className="text-3xl font-black text-white mb-1">10k+</h4>
+                  <p className="text-sm text-slate-500 uppercase tracking-wider font-bold">Active Users</p>
+                </div>
+                <div>
+                  <h4 className="text-3xl font-black text-white mb-1">99.9%</h4>
+                  <p className="text-sm text-slate-500 uppercase tracking-wider font-bold">Uptime</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="relative">
+              <div className="aspect-square rounded-[3rem] bg-gradient-to-br from-primary-600 to-indigo-700 p-1">
+                <div className="w-full h-full bg-slate-900 rounded-[2.8rem] flex items-center justify-center p-12">
+                   <div className="text-center">
+                      <div className="w-20 h-20 bg-primary-600/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <Users className="w-10 h-10 text-primary-400" />
+                      </div>
+                      <p className="text-xl font-bold text-white italic">
+                        "The best tool is the one that gets out of your way and lets you create."
+                      </p>
+                   </div>
+                </div>
+              </div>
+              {/* Floating element */}
+              <div className="absolute -bottom-6 -left-6 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 hidden sm:block">
+                 <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
+                     <TrendingUp className="w-6 h-6 text-white" />
+                   </div>
+                   <div>
+                     <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Productivity</p>
+                     <p className="text-lg font-black dark:text-white">+40% boost</p>
+                   </div>
+                 </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
