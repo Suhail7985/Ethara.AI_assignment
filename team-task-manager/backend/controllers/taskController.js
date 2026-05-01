@@ -157,10 +157,12 @@ const updateTask = async (req, res, next) => {
     const isCreator = task.createdBy.toString() === req.user._id.toString();
     
     if (req.user.role !== 'admin' && !isAssigned && !isCreator) {
-      // Check project ownership
+      // Check project ownership or membership
       const project = await Project.findById(task.project);
       const isProjectOwner = project?.owner.toString() === req.user._id.toString();
-      if (!isProjectOwner) {
+      const isProjectMember = project?.members.map(String).includes(req.user._id.toString());
+
+      if (!isProjectOwner && !isProjectMember) {
         return res.status(403).json({ success: false, message: 'Not authorized to update this task.' });
       }
     }
