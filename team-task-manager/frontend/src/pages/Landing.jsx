@@ -160,11 +160,51 @@ const Landing = () => {
             <div className="mt-20 relative mx-auto max-w-5xl group">
               <div className="absolute -inset-1 bg-gradient-to-r from-primary-600 to-indigo-600 rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
               <div className="relative bg-white dark:bg-slate-900 p-2 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-2xl shadow-slate-200 dark:shadow-none overflow-hidden">
-                <div className="bg-slate-50 dark:bg-slate-950 rounded-[2rem] aspect-[16/9] flex items-center justify-center border border-slate-200 dark:border-slate-800">
-                   <div className="flex flex-col items-center gap-4 opacity-40">
-                      <Layout className="w-20 h-20 text-slate-400" />
-                      <p className="text-xl font-bold text-slate-500">Premium Dashboard Experience</p>
-                   </div>
+                <div className="bg-slate-50 dark:bg-slate-950 rounded-[2rem] aspect-[16/9] relative overflow-hidden border border-slate-200 dark:border-slate-800 p-4 sm:p-8">
+                  {/* Mockup Sidebar */}
+                  <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-20 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col items-center py-6 gap-6">
+                    <div className="w-8 h-8 bg-primary-600 rounded-lg"></div>
+                    <div className="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-lg"></div>
+                    <div className="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-lg"></div>
+                    <div className="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-lg"></div>
+                  </div>
+                  
+                  {/* Mockup Content */}
+                  <div className="ml-20 flex flex-col gap-6">
+                    {/* Mockup Topbar */}
+                    <div className="flex items-center justify-between">
+                      <div className="h-6 w-32 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+                      <div className="h-8 w-8 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+                    </div>
+                    
+                    {/* Mockup Stats */}
+                    <div className="grid grid-cols-4 gap-4">
+                      {[1, 2, 3, 4].map(i => (
+                        <div key={i} className="h-20 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 p-3 flex flex-col gap-2">
+                           <div className="h-3 w-12 bg-slate-100 dark:bg-slate-800 rounded-full"></div>
+                           <div className="h-6 w-8 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Mockup Charts */}
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="col-span-2 h-48 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4">
+                         <div className="h-4 w-32 bg-slate-100 dark:bg-slate-800 rounded-full mb-6"></div>
+                         <div className="flex items-end gap-2 h-24">
+                           {[40, 70, 45, 90, 65, 80, 50].map((h, i) => (
+                             <div key={i} className="flex-1 bg-primary-500/20 rounded-t-md" style={{ height: `${h}%` }}></div>
+                           ))}
+                         </div>
+                      </div>
+                      <div className="h-48 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center justify-center">
+                         <div className="w-24 h-24 rounded-full border-[10px] border-primary-500 border-t-slate-100 dark:border-t-slate-800 rotate-45"></div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Overlay Gradient for depth */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-50/80 dark:from-slate-950/80 via-transparent pointer-events-none"></div>
                 </div>
               </div>
             </div>
