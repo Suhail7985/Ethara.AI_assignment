@@ -31,13 +31,16 @@ app.set('io', io);
 
 
 // ─── Security Middleware ────────────────────────────────────────────────────
-app.use(helmet());
+console.log('Environment CLIENT_URL:', process.env.CLIENT_URL);
+
 app.use(
   cors({
     origin: [process.env.CLIENT_URL, 'http://localhost:5173', 'http://localhost:5174'].filter(Boolean),
     credentials: true,
+    optionsSuccessStatus: 200
   })
 );
+app.use(helmet());
 
 // Rate limiting
 const limiter = rateLimit({
