@@ -11,26 +11,27 @@ const AuthLayout = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col relative overflow-x-hidden">
-      {/* Professional Responsive Header */}
-      <nav className="w-full px-6 py-6 sm:px-8 sm:py-8 flex items-center justify-between z-10">
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/20 group-hover:scale-105 transition-transform">
-            <CheckSquare className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-          </div>
-          <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">TaskFlow</span>
-        </Link>
-
+      {/* Floating Back Button */}
+      <div className="absolute top-6 left-6 sm:top-8 sm:left-8 z-10">
         <Link 
           to="/" 
-          className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 font-bold text-xs sm:text-sm rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 hover:text-primary-600 dark:hover:text-primary-500 transition-all group"
+          className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors group"
         >
-          <span className="hidden sm:inline">Back to home</span>
-          <span className="sm:hidden">Home</span>
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          Back to website
         </Link>
-      </nav>
+      </div>
 
       <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
+          {/* Logo Centered above form */}
+          <Link to="/" className="inline-flex items-center gap-2 group mb-6">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/20 group-hover:scale-105 transition-transform">
+              <CheckSquare className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+            </div>
+            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">TaskFlow</span>
+          </Link>
+
           <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Welcome back
           </h2>
