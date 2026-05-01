@@ -6,7 +6,6 @@ import {
   Moon, 
   Sun,
   Loader2,
-  CheckCircle2,
   X,
   MessageSquare,
   Clock
@@ -14,7 +13,6 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userService, taskService } from '../services/api';
 import useAuthStore from '../store/useAuthStore';
-import TaskModal from './TaskModal';
 import { toast } from 'react-hot-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -25,7 +23,6 @@ const Navbar = ({ onOpenSidebar }) => {
   const { user } = useAuthStore();
   const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem('theme') === 'dark');
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -51,20 +48,6 @@ const Navbar = ({ onOpenSidebar }) => {
     }
   });
 
-  const createTaskMutation = useMutation({
-    mutationFn: (data) => taskService.createTask(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['kanban'] });
-      queryClient.invalidateQueries({ queryKey: ['analytics'] });
-      toast.success('Task created successfully');
-      setIsTaskModalOpen(false);
-    },
-    onError: (err) => {
-      toast.error(err.response?.data?.message || 'Failed to create task');
-    }
-  });
-
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
   };
@@ -82,12 +65,11 @@ const Navbar = ({ onOpenSidebar }) => {
             <Menu className="w-6 h-6" />
           </button>
 
-          {/* Search bar */}
           <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-transparent focus-within:border-primary-500 rounded-xl transition-all w-64 lg:w-96">
             <Search className="w-4 h-4 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Search tasks, projects..." 
+              placeholder="Search..." 
               className="bg-transparent border-none outline-none text-sm w-full dark:text-white placeholder:text-slate-500"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -118,7 +100,7 @@ const Navbar = ({ onOpenSidebar }) => {
             {isNotificationsOpen && (
               <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-slide-up">
                 <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                  <h3 className="font-bold dark:text-white">Notifications</h3>
+                  <h3 className="font-bold dark:text-white">Inbox</h3>
                   <button onClick={() => setIsNotificationsOpen(false)} className="text-slate-400 hover:text-slate-600">
                     <X className="w-4 h-4" />
                   </button>
@@ -127,7 +109,7 @@ const Navbar = ({ onOpenSidebar }) => {
                   {isNotifLoading ? (
                     <div className="p-8 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary-500" /></div>
                   ) : notifications?.length === 0 ? (
-                    <div className="p-8 text-center text-slate-400 text-sm italic">No notifications yet</div>
+                    <div className="p-8 text-center text-slate-400 text-sm italic">Empty</div>
                   ) : (
                     notifications?.map((notif) => (
                       <div 
@@ -143,7 +125,7 @@ const Navbar = ({ onOpenSidebar }) => {
                             <p className="text-sm dark:text-slate-200">{notif.message}</p>
                             <div className="flex items-center gap-1 mt-1 text-[10px] text-slate-400">
                               <Clock className="w-3 h-3" />
-                              {formatDistanceToNow(new Date(notif.createdAt))} ago
+                              {formatDistanceToNow(new Date(notif.createdAt))}
                             </div>
                           </div>
                         </div>

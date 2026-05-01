@@ -71,7 +71,7 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
     onSuccess: () => {
       queryClient.invalidateQueries(['task', initialData._id]);
       setCommentText('');
-      toast.success('Comment added');
+      toast.success('Sent');
     }
   });
 
@@ -79,7 +79,7 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
     mutationFn: (commentId) => taskService.deleteComment(initialData._id, commentId),
     onSuccess: () => {
       queryClient.invalidateQueries(['task', initialData._id]);
-      toast.success('Comment deleted');
+      toast.success('Removed');
     }
   });
 
@@ -105,15 +105,14 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
       <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 animate-slide-up flex flex-col max-h-[90vh]">
         
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
           <div className="flex-1">
             <h2 className="text-xl font-bold dark:text-white">
-              {initialData ? 'Task Details' : 'Create New Task'}
+              {initialData ? 'Task' : 'New Task'}
             </h2>
             {initialData && (
               <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider font-bold">
-                Created by {initialData.createdBy?.name} • {formatDistanceToNow(new Date(initialData.createdAt))} ago
+                By {initialData.createdBy?.name} • {formatDistanceToNow(new Date(initialData.createdAt))} ago
               </p>
             )}
           </div>
@@ -122,7 +121,6 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
           </button>
         </div>
 
-        {/* Tabs */}
         {initialData && (
           <div className="flex border-b border-slate-100 dark:border-slate-800 px-6">
             <button 
@@ -135,10 +133,7 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
               onClick={() => setActiveTab('comments')}
               className={`px-4 py-3 text-sm font-bold transition-all border-b-2 flex items-center gap-2 ${activeTab === 'comments' ? 'border-primary-600 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
             >
-              Comments
-              <span className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px]">
-                {initialData.comments?.length || 0}
-              </span>
+              Comments ({initialData.comments?.length || 0})
             </button>
             <button 
               onClick={() => setActiveTab('activity')}
@@ -149,20 +144,18 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
           </div>
         )}
 
-        {/* Body */}
         <div className="flex-1 overflow-y-auto">
           {activeTab === 'details' ? (
             <form id="task-form" onSubmit={handleFormSubmit} className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-2 space-y-4">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Task Title</label>
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Title</label>
                     <input
                       type="text"
                       name="title"
                       required
                       className="input-field text-lg font-bold"
-                      placeholder="e.g. Design Landing Page"
                       value={formData.title}
                       onChange={handleChange}
                     />
@@ -174,7 +167,6 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
                       name="description"
                       rows="6"
                       className="input-field resize-none"
-                      placeholder="Add a detailed description..."
                       value={formData.description}
                       onChange={handleChange}
                     ></textarea>
@@ -193,14 +185,13 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
                       value={formData.project} 
                       onChange={handleChange}
                     >
-                      <option value="">
-                        {projects ? 'Select Project' : 'Loading projects...'}
-                      </option>
+                      <option value="">Select</option>
                       {projects?.map(p => (
                         <option key={p._id} value={p._id}>{p.name}</option>
                       ))}
                     </select>
-                  </div>                   <div>
+                  </div>
+                  <div>
                     <label className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
                       <UserIcon className="w-3 h-3" /> Assignee
                     </label>
@@ -216,11 +207,6 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
                         <option key={u._id} value={u._id}>{u.name}</option>
                       ))}
                     </select>
-                    {currentUser?.role !== 'admin' && (
-                      <p className="text-[10px] text-slate-400 mt-1">
-                        Task assignments are managed strictly by Project Administrators.
-                      </p>
-                    )}
                   </div>
                   <div className="grid grid-cols-1 gap-4">
                     <div>
@@ -229,9 +215,9 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
                       </label>
                       <select name="status" className="input-field text-sm" value={formData.status} onChange={handleChange}>
                         <option value="todo">To Do</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="review">In Review</option>
-                        <option value="completed">Completed</option>
+                        <option value="in-progress">Active</option>
+                        <option value="review">Review</option>
+                        <option value="completed">Done</option>
                       </select>
                     </div>
                     <div>
@@ -266,8 +252,7 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
               <div className="flex-1 space-y-6">
                 {initialData.comments?.length === 0 ? (
                   <div className="h-40 flex flex-col items-center justify-center text-slate-400 italic bg-slate-50 dark:bg-slate-800/50 rounded-2xl border-2 border-dashed border-slate-100 dark:border-slate-800">
-                    <MessageSquare className="w-8 h-8 mb-2 opacity-20" />
-                    No comments yet. Start the conversation!
+                    Empty.
                   </div>
                 ) : (
                   initialData.comments?.map((comment) => (
@@ -282,7 +267,7 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
                           <h4 className="text-xs font-bold dark:text-white">{comment.user?.name}</h4>
-                          <span className="text-[10px] text-slate-400">{formatDistanceToNow(new Date(comment.createdAt))} ago</span>
+                          <span className="text-[10px] text-slate-400">{formatDistanceToNow(new Date(comment.createdAt))}</span>
                         </div>
                         <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-2xl rounded-tl-none relative group/item">
                           <p className="text-sm dark:text-slate-300 leading-relaxed">{comment.text}</p>
@@ -305,14 +290,14 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
                 <form onSubmit={handleAddComment} className="relative">
                   <input 
                     type="text" 
-                    placeholder="Write a comment..." 
+                    placeholder="Comment..." 
                     className="input-field pr-12"
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
                   />
                   <button 
                     disabled={addCommentMutation.isPending || !commentText.trim()}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-primary-600 text-white rounded-xl disabled:opacity-50"
                   >
                     {addCommentMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   </button>
@@ -322,7 +307,7 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
           ) : (
             <div className="p-6 space-y-6 animate-fade-in">
               {initialData.activity?.length === 0 ? (
-                <div className="text-center py-12 text-slate-400 italic">No history available for this task.</div>
+                <div className="text-center py-12 text-slate-400 italic">No history.</div>
               ) : (
                 <div className="relative border-l-2 border-slate-100 dark:border-slate-800 ml-4 pl-8 space-y-8">
                   {[...initialData.activity].reverse().map((act, i) => (
@@ -343,14 +328,14 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
                             <span className="font-bold">{act.user?.name}</span> 
                             {' '}
                             <span className="text-slate-500">
-                              {act.action === 'created' ? 'created the task' : 
+                              {act.action === 'created' ? 'created' : 
                                act.action === 'status_change' ? act.details : 
                                act.action === 'assignment' ? act.details : 
                                act.action}
                             </span>
                           </p>
                           <span className="text-[10px] text-slate-400 font-medium">
-                            {formatDistanceToNow(new Date(act.createdAt))} ago
+                            {formatDistanceToNow(new Date(act.createdAt))}
                           </span>
                         </div>
                       </div>
@@ -362,12 +347,11 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
           )}
         </div>
 
-        {/* Footer */}
         <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex gap-3 bg-slate-50/50 dark:bg-slate-800/30">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-3 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 rounded-xl font-bold transition-all border border-slate-200 dark:border-slate-800 hover:bg-slate-50"
+            className="flex-1 px-4 py-3 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 rounded-xl font-bold border border-slate-200 dark:border-slate-800"
           >
             Cancel
           </button>
@@ -379,7 +363,7 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
               className="flex-1 btn-primary flex items-center justify-center gap-2 py-3 shadow-lg shadow-primary-500/30"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {initialData ? 'Update Task' : 'Create Task'}
+              {initialData ? 'Update' : 'Create'}
             </button>
           )}
         </div>

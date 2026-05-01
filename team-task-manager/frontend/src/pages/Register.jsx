@@ -9,9 +9,9 @@ import { authService } from '../services/api';
 import useAuthStore from '../store/useAuthStore';
 
 const registerSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  name: z.string().min(2, 'Name too short'),
+  email: z.string().email('Invalid email'),
+  password: z.string().min(6, 'Min 6 characters'),
   role: z.enum(['admin', 'member']).default('member'),
 });
 
@@ -38,12 +38,11 @@ const Register = () => {
     try {
       const response = await authService.register(data);
       const { user, token, message } = response.data;
-      
       setAuth(user, token);
-      toast.success(message || 'Account created successfully!');
+      toast.success(message || 'Account created');
       navigate('/dashboard');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Registration failed.');
+      toast.error(error.response?.data?.message || 'Failed');
     } finally {
       setIsLoading(false);
     }
@@ -52,14 +51,14 @@ const Register = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-xl font-semibold dark:text-white">Create Account</h3>
-        <p className="text-sm text-slate-500">Get started with your team task manager.</p>
+        <h3 className="text-xl font-semibold dark:text-white">Register</h3>
+        <p className="text-sm text-slate-500">Join your team workspace.</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Full Name
+            Name
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -68,7 +67,7 @@ const Register = () => {
             <input
               {...register('name')}
               type="text"
-              className={`input-field pl-10 ${errors.name ? 'border-red-500 focus:ring-red-500' : ''}`}
+              className={`input-field pl-10 ${errors.name ? 'border-red-500' : ''}`}
               placeholder="John Doe"
             />
           </div>
@@ -77,7 +76,7 @@ const Register = () => {
 
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Email Address
+            Email
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -86,8 +85,8 @@ const Register = () => {
             <input
               {...register('email')}
               type="email"
-              className={`input-field pl-10 ${errors.email ? 'border-red-500 focus:ring-red-500' : ''}`}
-              placeholder="name@company.com"
+              className={`input-field pl-10 ${errors.email ? 'border-red-500' : ''}`}
+              placeholder="email@example.com"
             />
           </div>
           {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
@@ -104,7 +103,7 @@ const Register = () => {
             <input
               {...register('password')}
               type="password"
-              className={`input-field pl-10 ${errors.password ? 'border-red-500 focus:ring-red-500' : ''}`}
+              className={`input-field pl-10 ${errors.password ? 'border-red-500' : ''}`}
               placeholder="••••••••"
             />
           </div>
@@ -113,7 +112,7 @@ const Register = () => {
 
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            Join as
+            Role
           </label>
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -121,8 +120,8 @@ const Register = () => {
               onClick={() => setValue('role', 'member')}
               className={`flex items-center justify-center gap-2 px-4 py-2 border rounded-xl transition-all ${
                 selectedRole === 'member' 
-                ? 'bg-primary-50 border-primary-500 text-primary-700 ring-1 ring-primary-500' 
-                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                ? 'bg-primary-50 border-primary-500 text-primary-700' 
+                : 'bg-white text-slate-600'
               }`}
             >
               <User className="w-4 h-4" />
@@ -133,8 +132,8 @@ const Register = () => {
               onClick={() => setValue('role', 'admin')}
               className={`flex items-center justify-center gap-2 px-4 py-2 border rounded-xl transition-all ${
                 selectedRole === 'admin' 
-                ? 'bg-primary-50 border-primary-500 text-primary-700 ring-1 ring-primary-500' 
-                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                ? 'bg-primary-50 border-primary-500 text-primary-700' 
+                : 'bg-white text-slate-600'
               }`}
             >
               <Shield className="w-4 h-4" />
@@ -146,22 +145,22 @@ const Register = () => {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full btn-primary flex justify-center items-center gap-2 py-3 shadow-lg shadow-primary-500/30"
+          className="w-full btn-primary flex justify-center items-center gap-2 py-3"
         >
           {isLoading ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Creating account...
+              Loading...
             </>
           ) : (
-            'Create Account'
+            'Sign Up'
           )}
         </button>
       </form>
 
       <div className="text-center text-sm text-slate-600 dark:text-slate-400 mt-4">
-        Already have an account?{' '}
-        <Link to="/login" className="font-semibold text-primary-600 hover:text-primary-500 transition-colors">
+        Already registered?{' '}
+        <Link to="/login" className="font-semibold text-primary-600 hover:text-primary-500">
           Sign In
         </Link>
       </div>

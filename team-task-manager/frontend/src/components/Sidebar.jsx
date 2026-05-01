@@ -30,7 +30,6 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   return (
     <>
-      {/* Mobile Overlay */}
       {isOpen && (
         <div 
           className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden"
@@ -44,7 +43,6 @@ const Sidebar = ({ isOpen, onClose }) => {
         lg:translate-x-0 lg:static lg:inset-0
       `}>
         <div className="flex flex-col h-full">
-          {/* Logo */}
           <div className="flex items-center justify-between h-16 px-6 border-b border-slate-100 dark:border-slate-800">
             <Link to="/" className="flex items-center gap-2">
               <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
@@ -59,7 +57,6 @@ const Sidebar = ({ isOpen, onClose }) => {
             </button>
           </div>
 
-          {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
             {filteredItems.map((item) => {
               const isActive = location.pathname === item.path;
@@ -82,7 +79,6 @@ const Sidebar = ({ isOpen, onClose }) => {
             })}
           </nav>
 
-          {/* User Profile / Logout */}
           <div className="p-4 border-t border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-3 px-4 py-3">
               <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-700 dark:text-primary-300 font-bold">

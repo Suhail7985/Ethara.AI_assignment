@@ -2,14 +2,11 @@ const Project = require('../models/Project');
 const Task = require('../models/Task');
 const User = require('../models/User');
 
-// @desc    Get all projects for current user
-// @route   GET /api/projects
 const getProjects = async (req, res, next) => {
   try {
     const { status, priority, page = 1, limit = 20, search } = req.query;
     const query = {};
 
-    // Admins see all projects; members see only their own or where they are members
     if (req.user.role !== 'admin') {
       query.$or = [{ owner: req.user._id }, { members: req.user._id }];
     }
@@ -29,7 +26,6 @@ const getProjects = async (req, res, next) => {
       Project.countDocuments(query),
     ]);
 
-    // Attach task counts per project
     const projectIds = projects.map((p) => p._id);
     const taskCounts = await Task.aggregate([
       { $match: { project: { $in: projectIds } } },
@@ -63,20 +59,18 @@ const getProjects = async (req, res, next) => {
   }
 };
 
-// @desc    Get single project
-// @route   GET /api/projects/:id
 const getProject = async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.id)
       .populate('owner', 'name email avatar role')
       .populate('members', 'name email avatar role');
 
-    if (!project) return res.status(404).json({ success: false, message: 'Project not found.' });
+    if (!project) return res.status(404).json({ success: false, message: 'Not found' });
 
     const isOwner = project.owner._id.toString() === req.user._id.toString();
     const isMember = project.members.some((m) => m._id.toString() === req.user._id.toString());
     if (req.user.role !== 'admin' && !isOwner && !isMember) {
-      return res.status(403).json({ success: false, message: 'Access denied.' });
+      return res.status(403).json({ success: false, message: 'Denied' });
     }
 
     res.json({ success: true, data: project });
@@ -85,8 +79,6 @@ const getProject = async (req, res, next) => {
   }
 };
 
-// @desc    Create project
-// @route   POST /api/projects
 const createProject = async (req, res, next) => {
   try {
     const { name, description, status, priority, deadline, members, color, tags } = req.body;
@@ -100,14 +92,13 @@ const createProject = async (req, res, next) => {
     await project.populate('owner', 'name email avatar');
     await project.populate('members', 'name email avatar');
 
-    // Notify members
     if (members?.length) {
       await User.updateMany(
         { _id: { $in: members } },
         {
           $push: {
             notifications: {
-              message: `You've been added to project "${name}"`,
+              message: `New project: ${name}`,
               type: 'info',
             },
           },
@@ -115,22 +106,20 @@ const createProject = async (req, res, next) => {
       );
     }
 
-    res.status(201).json({ success: true, message: 'Project created.', data: project });
+    res.status(201).json({ success: true, data: project });
   } catch (err) {
     next(err);
   }
 };
 
-// @desc    Update project
-// @route   PUT /api/projects/:id
 const updateProject = async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.id);
-    if (!project) return res.status(404).json({ success: false, message: 'Project not found.' });
+    if (!project) return res.status(404).json({ success: false, message: 'Not found' });
 
     const isOwner = project.owner.toString() === req.user._id.toString();
     if (req.user.role !== 'admin' && !isOwner) {
-      return res.status(403).json({ success: false, message: 'Only project owner or admin can edit.' });
+      return res.status(403).json({ success: false, message: 'Denied' });
     }
 
     const updated = await Project.findByIdAndUpdate(req.params.id, req.body, {
@@ -140,28 +129,26 @@ const updateProject = async (req, res, next) => {
       .populate('owner', 'name email avatar')
       .populate('members', 'name email avatar');
 
-    res.json({ success: true, message: 'Project updated.', data: updated });
+    res.json({ success: true, data: updated });
   } catch (err) {
     next(err);
   }
 };
 
-// @desc    Delete project
-// @route   DELETE /api/projects/:id
 const deleteProject = async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.id);
-    if (!project) return res.status(404).json({ success: false, message: 'Project not found.' });
+    if (!project) return res.status(404).json({ success: false, message: 'Not found' });
 
     const isOwner = project.owner.toString() === req.user._id.toString();
     if (req.user.role !== 'admin' && !isOwner) {
-      return res.status(403).json({ success: false, message: 'Only project owner or admin can delete.' });
+      return res.status(403).json({ success: false, message: 'Denied' });
     }
 
     await Task.deleteMany({ project: req.params.id });
     await Project.findByIdAndDelete(req.params.id);
 
-    res.json({ success: true, message: 'Project and all its tasks deleted.' });
+    res.json({ success: true });
   } catch (err) {
     next(err);
   }

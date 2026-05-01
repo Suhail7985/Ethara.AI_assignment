@@ -66,7 +66,7 @@ const ProjectModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading
       <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 animate-slide-up">
         <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
           <h2 className="text-xl font-bold dark:text-white">
-            {initialData ? 'Edit Project' : 'Create New Project'}
+            {initialData ? 'Edit Project' : 'New Project'}
           </h2>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
             <X className="w-5 h-5 text-slate-500" />
@@ -76,14 +76,14 @@ const ProjectModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              Project Name
+              Name
             </label>
             <input
               type="text"
               name="name"
               required
               className="input-field"
-              placeholder="e.g. Website Redesign"
+              placeholder="Project Name"
               value={formData.name}
               onChange={handleChange}
             />
@@ -97,7 +97,7 @@ const ProjectModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading
               name="description"
               rows="3"
               className="input-field"
-              placeholder="What is this project about?"
+              placeholder="Details"
               value={formData.description}
               onChange={handleChange}
             ></textarea>
@@ -116,7 +116,7 @@ const ProjectModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Color Theme
+                Color
               </label>
               <input
                 type="color"
@@ -143,7 +143,7 @@ const ProjectModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading
 
           <div>
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-              Team Members
+              Members
             </label>
             <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-950">
               {users?.map(user => (
@@ -177,7 +177,7 @@ const ProjectModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading
               className="flex-1 btn-primary flex items-center justify-center gap-2"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {initialData ? 'Update Project' : 'Create Project'}
+              {initialData ? 'Update' : 'Create'}
             </button>
           </div>
         </form>

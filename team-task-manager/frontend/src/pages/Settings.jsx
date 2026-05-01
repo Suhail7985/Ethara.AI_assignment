@@ -35,9 +35,9 @@ const Settings = () => {
     try {
       const res = await authService.updateProfile(profileData);
       updateUser(res.data.user);
-      toast.success('Profile updated successfully');
+      toast.success('Updated');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update profile');
+      toast.error(err.response?.data?.message || 'Error');
     } finally {
       setIsLoading(false);
     }
@@ -46,7 +46,7 @@ const Settings = () => {
   const handlePasswordChange = async (e) => {
     e.preventDefault();
     if (securityData.newPassword !== securityData.confirmPassword) {
-      return toast.error('Passwords do not match');
+      return toast.error('Mismatch');
     }
     setIsLoading(true);
     try {
@@ -54,10 +54,10 @@ const Settings = () => {
         currentPassword: securityData.currentPassword,
         newPassword: securityData.newPassword
       });
-      toast.success('Password changed successfully');
+      toast.success('Success');
       setSecurityData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to change password');
+      toast.error(err.response?.data?.message || 'Error');
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +66,7 @@ const Settings = () => {
   const tabs = [
     { id: 'profile', name: 'Profile', icon: User },
     { id: 'security', name: 'Security', icon: Lock },
-    { id: 'team', name: 'Team Access', icon: Shield, adminOnly: true },
+    { id: 'team', name: 'Access', icon: Shield, adminOnly: true },
   ];
 
   const filteredTabs = tabs.filter(tab => !tab.adminOnly || user?.role === 'admin');
@@ -76,7 +76,6 @@ const Settings = () => {
       <h1 className="text-2xl font-bold dark:text-white">Settings</h1>
 
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Sidebar Tabs */}
         <div className="lg:w-64 flex-shrink-0">
           <nav className="space-y-1">
             {filteredTabs.map((tab) => (
@@ -96,11 +95,10 @@ const Settings = () => {
           </nav>
         </div>
 
-        {/* Content Area */}
         <div className="flex-1 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
           {activeTab === 'profile' && (
             <div className="p-6 md:p-8 animate-fade-in">
-              <h2 className="text-lg font-bold dark:text-white mb-6">Profile Information</h2>
+              <h2 className="text-lg font-bold dark:text-white mb-6">Profile</h2>
               
               <form onSubmit={handleProfileUpdate} className="space-y-6 max-w-2xl">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
@@ -126,7 +124,7 @@ const Settings = () => {
                       onChange={(e) => {
                         const file = e.target.files[0];
                         if (file) {
-                          if (file.size > 2 * 1024 * 1024) return toast.error('Image must be under 2MB');
+                          if (file.size > 2 * 1024 * 1024) return toast.error('Max 2MB');
                           const reader = new FileReader();
                           reader.onloadend = () => {
                             setProfileData({ ...profileData, avatar: reader.result });
@@ -137,14 +135,14 @@ const Settings = () => {
                     />
                   </div>
                   <div>
-                    <h4 className="font-bold dark:text-white">Profile Photo</h4>
-                    <p className="text-xs text-slate-500 mt-1">PNG, JPG or GIF. Max 2MB.</p>
+                    <h4 className="font-bold dark:text-white">Photo</h4>
+                    <p className="text-xs text-slate-500 mt-1">2MB limit.</p>
                     <div className="flex gap-2 mt-3">
                       <label 
                         htmlFor="avatar-upload"
                         className="text-xs font-bold text-primary-600 hover:underline cursor-pointer"
                       >
-                        Upload new
+                        Upload
                       </label>
                       <button 
                         type="button" 
@@ -159,7 +157,7 @@ const Settings = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Name</label>
                     <input 
                       type="text" 
                       className="input-field" 
@@ -168,7 +166,7 @@ const Settings = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email Address</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
                     <input 
                       type="email" 
                       className="input-field opacity-60 cursor-not-allowed" 
@@ -185,7 +183,7 @@ const Settings = () => {
                     className="btn-primary flex items-center gap-2"
                   >
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                    Save Changes
+                    Save
                   </button>
                 </div>
               </form>
@@ -194,11 +192,11 @@ const Settings = () => {
 
           {activeTab === 'security' && (
             <div className="p-6 md:p-8 animate-fade-in">
-              <h2 className="text-lg font-bold dark:text-white mb-6">Security Settings</h2>
+              <h2 className="text-lg font-bold dark:text-white mb-6">Security</h2>
               
               <form onSubmit={handlePasswordChange} className="space-y-6 max-w-md">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Current Password</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Current</label>
                   <input 
                     type="password" 
                     className="input-field" 
@@ -208,7 +206,7 @@ const Settings = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">New Password</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">New</label>
                   <input 
                     type="password" 
                     className="input-field" 
@@ -219,7 +217,7 @@ const Settings = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Confirm New Password</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Confirm</label>
                   <input 
                     type="password" 
                     className="input-field" 
@@ -236,7 +234,7 @@ const Settings = () => {
                     className="btn-primary flex items-center gap-2"
                   >
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
-                    Update Password
+                    Update
                   </button>
                 </div>
               </form>
@@ -246,10 +244,10 @@ const Settings = () => {
           {activeTab === 'team' && user?.role === 'admin' && (
             <div className="p-6 md:p-8 animate-fade-in">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-bold dark:text-white">Team Management</h2>
+                <h2 className="text-lg font-bold dark:text-white">Team</h2>
                 <button className="btn-primary text-xs flex items-center gap-2">
                   <UserPlus className="w-3.5 h-3.5" />
-                  Invite Member
+                  Invite
                 </button>
               </div>
               
@@ -260,11 +258,10 @@ const Settings = () => {
                       <th className="px-4 py-3">Member</th>
                       <th className="px-4 py-3">Role</th>
                       <th className="px-4 py-3">Status</th>
-                      <th className="px-4 py-3 text-right">Action</th>
+                      <th className="px-4 py-3 text-right"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {/* This would normally fetch from API, for now we show a placeholder or the user themselves */}
                     <tr className="text-sm">
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
@@ -272,7 +269,7 @@ const Settings = () => {
                             {user.name.charAt(0)}
                           </div>
                           <div>
-                            <p className="font-semibold dark:text-white">{user.name} (You)</p>
+                            <p className="font-semibold dark:text-white">{user.name}</p>
                             <p className="text-xs text-slate-500">{user.email}</p>
                           </div>
                         </div>
@@ -295,17 +292,6 @@ const Settings = () => {
                   </tbody>
                 </table>
               </div>
-              <p className="mt-6 text-xs text-slate-500 italic">Note: Full team management is available in the dedicated Team section.</p>
-            </div>
-          )}
-
-          {activeTab !== 'profile' && activeTab !== 'security' && activeTab !== 'team' && (
-            <div className="p-20 text-center flex flex-col items-center justify-center animate-fade-in">
-              <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-                <Palette className="w-8 h-8 text-slate-300" />
-              </div>
-              <h3 className="text-lg font-bold dark:text-white">Module Coming Soon</h3>
-              <p className="text-sm text-slate-500 mt-1 max-w-[250px]">We're still fine-tuning this section for the perfect experience.</p>
             </div>
           )}
         </div>

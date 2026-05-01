@@ -23,7 +23,6 @@ const projectSchema = new mongoose.Schema(
   }
 );
 
-// Virtual: task count (populated by controller)
 projectSchema.virtual('taskCount', {
   ref: 'Task',
   localField: '_id',

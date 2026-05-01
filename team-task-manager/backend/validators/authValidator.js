@@ -1,18 +1,9 @@
 const Joi = require('joi');
 
 const registerSchema = Joi.object({
-  name: Joi.string().min(2).max(100).required().messages({
-    'string.min': 'Name must be at least 2 characters',
-    'any.required': 'Name is required',
-  }),
-  email: Joi.string().email().required().messages({
-    'string.email': 'Please provide a valid email',
-    'any.required': 'Email is required',
-  }),
-  password: Joi.string().min(6).required().messages({
-    'string.min': 'Password must be at least 6 characters',
-    'any.required': 'Password is required',
-  }),
+  name: Joi.string().min(2).max(100).required(),
+  email: Joi.string().email().required(),
+  password: Joi.string().min(6).required(),
   role: Joi.string().valid('admin', 'member').default('member'),
 });
 
@@ -24,8 +15,7 @@ const loginSchema = Joi.object({
 const validate = (schema) => (req, res, next) => {
   const { error } = schema.validate(req.body, { abortEarly: false });
   if (error) {
-    const errors = error.details.map((d) => d.message);
-    return res.status(400).json({ success: false, message: 'Validation failed', errors });
+    return res.status(400).json({ success: false, message: 'Invalid data' });
   }
   next();
 };

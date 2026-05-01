@@ -1,8 +1,6 @@
 import axios from 'axios';
 import useAuthStore from '../store/useAuthStore';
 
-// For separate deployments, the frontend must know the exact backend URL.
-// We use VITE_API_URL which is set in your .env file or hosting provider.
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const API = axios.create({
@@ -12,7 +10,6 @@ const API = axios.create({
   },
 });
 
-// Request interceptor for adding JWT token
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('token') || useAuthStore.getState().token;
   if (token) {
@@ -23,7 +20,6 @@ API.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
-// Response interceptor for handling 401 errors
 API.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -37,7 +33,6 @@ API.interceptors.response.use(
   }
 );
 
-// Auth Services
 export const authService = {
   login: (data) => API.post('/auth/login', data),
   register: (data) => API.post('/auth/register', data),
@@ -46,7 +41,6 @@ export const authService = {
   changePassword: (data) => API.put('/auth/change-password', data),
 };
 
-// Project Services
 export const projectService = {
   getProjects: (params) => API.get('/projects', { params }),
   getProject: (id) => API.get(`/projects/${id}`),
@@ -55,7 +49,6 @@ export const projectService = {
   deleteProject: (id) => API.delete(`/projects/${id}`),
 };
 
-// Task Services
 export const taskService = {
   getTasks: (params) => API.get('/tasks', { params }),
   getTask: (id) => API.get(`/tasks/${id}`),
@@ -66,7 +59,6 @@ export const taskService = {
   deleteComment: (id, commentId) => API.delete(`/tasks/${id}/comments/${commentId}`),
 };
 
-// User/Team Services
 export const userService = {
   getUsers: (params) => API.get('/users', { params }),
   getAnalytics: () => API.get('/users/analytics'),

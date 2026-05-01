@@ -3,14 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Plus, 
   Search, 
-  MoreVertical, 
   Clock, 
-  Users, 
-  ChevronRight,
   FolderOpen,
   Trash2,
-  Edit,
-  Loader2
+  Edit
 } from 'lucide-react';
 import { projectService } from '../services/api';
 import { toast } from 'react-hot-toast';
@@ -34,11 +30,11 @@ const Projects = () => {
     mutationFn: (data) => projectService.createProject(data),
     onSuccess: () => {
       queryClient.invalidateQueries(['projects']);
-      toast.success('Project created successfully');
+      toast.success('Created');
       setIsModalOpen(false);
     },
     onError: (err) => {
-      toast.error(err.response?.data?.message || 'Failed to create project');
+      toast.error(err.response?.data?.message || 'Error');
     }
   });
 
@@ -46,12 +42,12 @@ const Projects = () => {
     mutationFn: ({ id, data }) => projectService.updateProject(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries(['projects']);
-      toast.success('Project updated successfully');
+      toast.success('Updated');
       setIsModalOpen(false);
       setSelectedProject(null);
     },
     onError: (err) => {
-      toast.error(err.response?.data?.message || 'Failed to update project');
+      toast.error(err.response?.data?.message || 'Error');
     }
   });
 
@@ -59,7 +55,7 @@ const Projects = () => {
     mutationFn: (id) => projectService.deleteProject(id),
     onSuccess: () => {
       queryClient.invalidateQueries(['projects']);
-      toast.success('Project deleted');
+      toast.success('Deleted');
     },
   });
 
@@ -82,7 +78,7 @@ const Projects = () => {
   };
 
   const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this project? All associated tasks will be removed.')) {
+    if (window.confirm('Delete project?')) {
       deleteProjectMutation.mutate(id);
     }
   };
@@ -94,24 +90,23 @@ const Projects = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Projects</h1>
-          <p className="text-slate-500 text-sm mt-1">Manage and track your workspace projects.</p>
+          <p className="text-slate-500 text-sm mt-1">Workspace management.</p>
         </div>
         
         {isAdmin && (
           <button onClick={handleCreate} className="btn-primary flex items-center gap-2">
             <Plus className="w-5 h-5" />
-            New Project
+            New
           </button>
         )}
       </div>
 
-      {/* Filters & Search */}
       <div className="flex items-center gap-4">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input 
             type="text" 
-            placeholder="Search projects..." 
+            placeholder="Search..." 
             className="input-field pl-10"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -170,7 +165,7 @@ const Projects = () => {
                   {project.name}
                 </h3>
                 <p className="text-xs text-slate-500 line-clamp-2 mb-6">
-                  {project.description || 'No description provided for this project.'}
+                  {project.description || 'N/A'}
                 </p>
 
                 <div className="space-y-4">
@@ -201,7 +196,7 @@ const Projects = () => {
 
                     <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
                       <Clock className="w-3 h-3" />
-                      {project.deadline ? new Date(project.deadline).toLocaleDateString() : 'No deadline'}
+                      {project.deadline ? new Date(project.deadline).toLocaleDateString() : 'N/A'}
                     </div>
                   </div>
                 </div>
@@ -258,7 +253,7 @@ const Projects = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-[10px] font-medium text-slate-500">
-                          {project.deadline ? new Date(project.deadline).toLocaleDateString() : 'No deadline'}
+                          {project.deadline ? new Date(project.deadline).toLocaleDateString() : 'N/A'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -279,9 +274,9 @@ const Projects = () => {
           {(!projects || projects.length === 0) && (
             <div className="col-span-full py-20 text-center bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
               <FolderOpen className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold dark:text-white">No projects yet</h3>
-              <p className="text-slate-500 text-sm mt-1">Create your first project to start managing tasks.</p>
-              <button onClick={handleCreate} className="btn-primary mt-6">Create New Project</button>
+              <h3 className="text-lg font-semibold dark:text-white">Empty</h3>
+              <p className="text-slate-500 text-sm mt-1">Start by creating a project.</p>
+              <button onClick={handleCreate} className="btn-primary mt-6">Create New</button>
             </div>
           )}
         </div>

@@ -46,7 +46,6 @@ const taskSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Set completedAt when status changes to completed
 taskSchema.pre('save', async function () {
   if (this.isModified('status')) {
     if (this.status === 'completed' && !this.completedAt) {
@@ -57,7 +56,6 @@ taskSchema.pre('save', async function () {
   }
 });
 
-// Virtual: isOverdue
 taskSchema.virtual('isOverdue').get(function () {
   return this.dueDate && new Date() > this.dueDate && this.status !== 'completed';
 });

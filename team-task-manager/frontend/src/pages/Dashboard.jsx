@@ -9,9 +9,7 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell,
-  LineChart,
-  Line
+  Cell
 } from 'recharts';
 import { 
   CheckCircle2, 
@@ -69,7 +67,7 @@ const Dashboard = () => {
           <h3 className="text-3xl font-bold mt-1 dark:text-white">{value}</h3>
           {trend && (
             <div className="flex items-center gap-1 mt-2 text-xs font-medium text-emerald-600">
-              <TrendingUp className="w-3 h-3" />
+              <TrendingUp className="w-3 h-3"Trend />
               <span>{trend}</span>
             </div>
           )}
@@ -83,7 +81,6 @@ const Dashboard = () => {
 
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const weeklyData = days.map((day, index) => {
-    // MongoDB $dayOfWeek returns 1 for Sunday, 2 for Monday, etc.
     const found = analytics?.weeklyCompleted?.find(w => w._id === index + 1);
     return {
       name: day,
@@ -96,7 +93,7 @@ const Dashboard = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Workspace Overview</h1>
-          <p className="text-slate-500 text-sm mt-1">Here's what's happening with your projects today.</p>
+          <p className="text-slate-500 text-sm mt-1">Status and performance overview.</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center gap-2 text-sm font-medium">
@@ -106,7 +103,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
           title="Active Projects" 
@@ -136,7 +132,6 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Productivity Chart */}
         <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-bold text-lg dark:text-white">Weekly Performance</h3>
@@ -163,7 +158,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Status Distribution */}
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
           <h3 className="font-bold text-lg mb-6 dark:text-white">Task Status</h3>
           <div className="h-64 relative">
@@ -204,7 +198,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Recent Activities */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
           <h3 className="font-bold text-lg mb-6 dark:text-white">Recent Tasks</h3>
@@ -266,13 +259,12 @@ const Dashboard = () => {
               </div>
             </div>
             <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400 max-w-[250px]">
-              You've completed <span className="font-bold text-primary-600">{analytics?.completed}</span> tasks this week. Keep the momentum going!
+              Summary of your weekly achievements.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Team Workload */}
       <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
         <h3 className="font-bold text-lg mb-6 dark:text-white">Team Workload</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -302,7 +294,7 @@ const Dashboard = () => {
             </div>
           ))}
           {(!analytics?.teamWorkload || analytics.teamWorkload.length === 0) && (
-            <div className="col-span-full py-10 text-center text-slate-400 italic">No active workload data.</div>
+            <div className="col-span-full py-10 text-center text-slate-400 italic">No data.</div>
           )}
         </div>
       </div>

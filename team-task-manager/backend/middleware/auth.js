@@ -9,26 +9,26 @@ const protect = async (req, res, next) => {
     }
 
     if (!token) {
-      return res.status(401).json({ success: false, message: 'Access denied. No token provided.' });
+      return res.status(401).json({ success: false, message: 'Denied' });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).select('-password');
 
     if (!user || !user.isActive) {
-      return res.status(401).json({ success: false, message: 'User not found or inactive.' });
+      return res.status(401).json({ success: false, message: 'Invalid' });
     }
 
     req.user = user;
     next();
   } catch (err) {
-    return res.status(401).json({ success: false, message: 'Invalid or expired token.' });
+    return res.status(401).json({ success: false, message: 'Error' });
   }
 };
 
 const adminOnly = (req, res, next) => {
   if (req.user?.role !== 'admin') {
-    return res.status(403).json({ success: false, message: 'Admin access required.' });
+    return res.status(403).json({ success: false, message: 'Admin only' });
   }
   next();
 };

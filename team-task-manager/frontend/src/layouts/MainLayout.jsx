@@ -21,7 +21,6 @@ const MainLayout = () => {
           icon: '🔔',
           duration: 5000,
         });
-        // Invalidate notifications query to update Navbar
         queryClient.invalidateQueries(['notifications']);
       });
     }

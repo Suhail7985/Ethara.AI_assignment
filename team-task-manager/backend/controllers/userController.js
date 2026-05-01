@@ -2,8 +2,6 @@ const User = require('../models/User');
 const Project = require('../models/Project');
 const Task = require('../models/Task');
 
-// @desc    Get all users (admin) or team members
-// @route   GET /api/users
 const getUsers = async (req, res, next) => {
   try {
     const { search, role, page = 1, limit = 20 } = req.query;
@@ -33,40 +31,33 @@ const getUsers = async (req, res, next) => {
   }
 };
 
-// @desc    Get user by ID
-// @route   GET /api/users/:id
 const getUserById = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
-    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+    if (!user) return res.status(404).json({ success: false, message: 'Not found' });
     res.json({ success: true, data: user });
   } catch (err) {
     next(err);
   }
 };
 
-// @desc    Invite / update user role (admin only)
-// @route   POST /api/users/invite
 const inviteUser = async (req, res, next) => {
   try {
     const { email, role = 'member', name } = req.body;
-    if (!email) return res.status(400).json({ success: false, message: 'Email is required.' });
+    if (!email) return res.status(400).json({ success: false, message: 'Required' });
 
     let user = await User.findOne({ email });
     if (user) {
-      // Update role if already exists
       user.role = role;
       await user.save({ validateBeforeSave: false });
-      return res.json({ success: true, message: `User role updated to ${role}.`, data: user });
+      return res.json({ success: true, data: user });
     }
 
-    // Create a placeholder account
     const tempPassword = Math.random().toString(36).slice(-10);
     user = await User.create({ name: name || email.split('@')[0], email, password: tempPassword, role });
 
     res.status(201).json({
       success: true,
-      message: 'User invited. Share their temporary password.',
       data: user,
       tempPassword,
     });
@@ -75,8 +66,6 @@ const inviteUser = async (req, res, next) => {
   }
 };
 
-// @desc    Update user (admin)
-// @route   PUT /api/users/:id
 const updateUser = async (req, res, next) => {
   try {
     const { name, role, isActive, avatar } = req.body;
@@ -85,15 +74,13 @@ const updateUser = async (req, res, next) => {
       { name, role, isActive, avatar },
       { new: true, runValidators: true }
     ).select('-password');
-    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+    if (!user) return res.status(404).json({ success: false, message: 'Not found' });
     res.json({ success: true, data: user });
   } catch (err) {
     next(err);
   }
 };
 
-// @desc    Get notifications for current user
-// @route   GET /api/users/notifications
 const getNotifications = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id).select('notifications');
@@ -103,42 +90,37 @@ const getNotifications = async (req, res, next) => {
   }
 };
 
-// @desc    Mark notification as read
-// @route   PUT /api/users/notifications/:notifId/read
 const markNotificationRead = async (req, res, next) => {
   try {
     await User.updateOne(
       { _id: req.user._id, 'notifications._id': req.params.notifId },
       { $set: { 'notifications.$.read': true } }
     );
-    res.json({ success: true, message: 'Notification marked as read.' });
+    res.json({ success: true });
   } catch (err) {
     next(err);
   }
 };
 
-// @desc    Dashboard analytics
-// @route   GET /api/users/analytics
 const getAnalytics = async (req, res, next) => {
   try {
     const userId = req.user._id;
     const isAdmin = req.user.role === 'admin';
 
-    // Project filter
     const projectFilter = isAdmin
       ? {}
       : { $or: [{ owner: userId }, { members: userId }] };
 
-    const projects = await Project.find(projectFilter).select('_id status');
+    const projects = await Project.find(projectFilter).select('_id');
     const projectIds = projects.map((p) => p._id);
 
-    const taskFilter = isAdmin 
-      ? {} 
-      : { 
+    const taskFilter = isAdmin
+      ? {}
+      : {
           $or: [
-            { project: { $in: projectIds } }, 
+            { project: { $in: projectIds } },
             { assignedTo: userId }
-          ] 
+          ]
         };
 
     const [totalProjects, taskStats, recentTasks, overdueCount] = await Promise.all([
@@ -156,7 +138,7 @@ const getAnalytics = async (req, res, next) => {
         .sort({ updatedAt: -1 })
         .limit(5)
         .populate('project', 'name color')
-        .populate('assignedTo', 'name'), // Exclude avatar from analytics tasks
+        .populate('assignedTo', 'name'),
       Task.countDocuments({
         ...taskFilter,
         dueDate: { $lt: new Date() },
@@ -164,7 +146,6 @@ const getAnalytics = async (req, res, next) => {
       }),
     ]);
 
-    // Weekly tasks completed (last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const weeklyCompleted = await Task.aggregate([
@@ -183,7 +164,6 @@ const getAnalytics = async (req, res, next) => {
       },
     ]);
 
-    // Team workload (active tasks per user)
     const teamWorkload = await Task.aggregate([
       { $match: { ...taskFilter, status: { $ne: 'completed' }, assignedTo: { $exists: true, $ne: null } } },
       {
@@ -204,8 +184,7 @@ const getAnalytics = async (req, res, next) => {
       {
         $project: {
           name: '$user.name',
-          count: 1
-          // Exclude avatar from workload aggregation
+          count: 1,
         }
       }
     ]);

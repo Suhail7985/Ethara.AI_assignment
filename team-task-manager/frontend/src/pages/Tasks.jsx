@@ -1,14 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { 
-  CheckSquare, 
-  Clock, 
-  AlertCircle, 
   Search, 
-  Filter, 
-  MoreVertical,
-  ChevronDown,
   Calendar,
   Plus,
   Trash2,
@@ -37,7 +31,7 @@ const Tasks = () => {
     mutationFn: (data) => taskService.createTask(data),
     onSuccess: () => {
       queryClient.invalidateQueries(['tasks']);
-      toast.success('Task created successfully');
+      toast.success('Task created');
       setIsModalOpen(false);
     },
   });
@@ -46,7 +40,7 @@ const Tasks = () => {
     mutationFn: ({ id, ...data }) => taskService.updateTask(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries(['tasks']);
-      toast.success('Task updated');
+      toast.success('Updated');
       setIsModalOpen(false);
       setSelectedTask(null);
     },
@@ -56,7 +50,7 @@ const Tasks = () => {
     mutationFn: (id) => taskService.deleteTask(id),
     onSuccess: () => {
       queryClient.invalidateQueries(['tasks']);
-      toast.success('Task deleted');
+      toast.success('Deleted');
     },
   });
 
@@ -76,7 +70,7 @@ const Tasks = () => {
   };
 
   const handleEdit = (task) => {
-    if (!canEdit(task)) return toast.error('You do not have permission to edit this task');
+    if (!canEdit(task)) return toast.error('Permission denied');
     setSelectedTask(task);
     setIsModalOpen(true);
   };
@@ -90,8 +84,8 @@ const Tasks = () => {
   };
 
   const handleDelete = (id, task) => {
-    if (!canDelete(task)) return toast.error('You do not have permission to delete this task');
-    if (window.confirm('Are you sure you want to delete this task?')) {
+    if (!canDelete(task)) return toast.error('Permission denied');
+    if (window.confirm('Confirm delete?')) {
       deleteTaskMutation.mutate(id);
     }
   };
@@ -111,13 +105,13 @@ const Tasks = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Tasks</h1>
-          <p className="text-slate-500 text-sm mt-1">View and manage all your assigned tasks.</p>
+          <p className="text-slate-500 text-sm mt-1">Assignment tracking.</p>
         </div>
         
         {isAdmin && (
           <button onClick={handleCreate} className="btn-primary flex items-center gap-2">
             <Plus className="w-4 h-4" />
-            New Task
+            New
           </button>
         )}
       </div>
@@ -141,13 +135,13 @@ const Tasks = () => {
               onClick={() => setFilterStatus('in-progress')}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${filterStatus === 'in-progress' ? 'bg-primary-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500'}`}
             >
-              In Progress
+              Active
             </button>
             <button 
               onClick={() => setFilterStatus('completed')}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${filterStatus === 'completed' ? 'bg-primary-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500'}`}
             >
-              Completed
+              Done
             </button>
           </div>
           
@@ -155,7 +149,7 @@ const Tasks = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Filter tasks..." 
+              placeholder="Search..." 
               className="input-field py-1.5 pl-10 text-sm w-full sm:w-64" 
               value={searchTerm}
               onChange={(e) => {
@@ -170,12 +164,12 @@ const Tasks = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50 dark:bg-slate-800/50 text-[10px] uppercase tracking-wider font-bold text-slate-500 border-b border-slate-100 dark:border-slate-800">
-                <th className="px-6 py-4">Task Name</th>
+                <th className="px-6 py-4">Title</th>
                 <th className="px-6 py-4">Project</th>
                 <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Due Date</th>
+                <th className="px-6 py-4">Due</th>
                 <th className="px-6 py-4">Priority</th>
-                <th className="px-6 py-4">Assigned</th>
+                <th className="px-6 py-4">User</th>
                 <th className="px-6 py-4"></th>
               </tr>
             </thead>
@@ -246,8 +240,8 @@ const Tasks = () => {
               ))}
               {(!tasks || tasks.length === 0) && !isLoading && (
                 <tr>
-                  <td colSpan="7" className="px-6 py-20 text-center text-slate-400 text-sm">
-                    No tasks found matching your filters.
+                  <td colSpan="7" className="px-6 py-20 text-center text-slate-400 text-sm italic">
+                    Empty list.
                   </td>
                 </tr>
               )}

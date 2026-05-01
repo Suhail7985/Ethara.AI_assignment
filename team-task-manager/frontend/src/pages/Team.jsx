@@ -6,7 +6,6 @@ import {
   Mail, 
   Shield, 
   User, 
-  MoreVertical,
   Trash2,
   Edit,
   Loader2,
@@ -136,7 +135,7 @@ const Team = () => {
   };
 
   const handleDeactivate = (id) => {
-    if (window.confirm('Are you sure you want to deactivate this user?')) {
+    if (window.confirm('Deactivate user?')) {
       updateMutation.mutate({ id, isActive: false });
     }
   };
@@ -145,8 +144,8 @@ const Team = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold dark:text-white">Team Members</h1>
-          <p className="text-slate-500 text-sm mt-1">Manage your organization's members and their access levels.</p>
+          <h1 className="text-2xl font-bold dark:text-white">Team</h1>
+          <p className="text-slate-500 text-sm mt-1">Manage organization members.</p>
         </div>
         
         {currentUser?.role === 'admin' && (
@@ -155,7 +154,7 @@ const Team = () => {
             className="btn-primary flex items-center gap-2"
           >
             <UserPlus className="w-4 h-4" />
-            Invite Member
+            Invite
           </button>
         )}
       </div>
@@ -165,7 +164,7 @@ const Team = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input 
             type="text" 
-            placeholder="Search by name or email..." 
+            placeholder="Search team..." 
             className="input-field pl-10 bg-slate-50 dark:bg-slate-800 border-none"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -231,25 +230,24 @@ const Team = () => {
         ))}
       </div>
 
-      {/* Invite Modal */}
       {isInviteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
           <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-slide-up border border-slate-100 dark:border-slate-800">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold dark:text-white">Invite Team Member</h3>
+                <h3 className="text-xl font-bold dark:text-white">Invite</h3>
                 <button onClick={() => setIsInviteModalOpen(false)}><X className="w-5 h-5 text-slate-400" /></button>
               </div>
-              <p className="text-sm text-slate-500 mt-1">Send an invitation to join your organization.</p>
+              <p className="text-sm text-slate-500 mt-1">Send an invitation to join.</p>
               
               <form onSubmit={handleInvite} className="mt-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email Address</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
                   <input 
                     type="email" 
                     required
                     className="input-field" 
-                    placeholder="teammate@company.com"
+                    placeholder="email@example.com"
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
                   />
@@ -261,8 +259,8 @@ const Team = () => {
                     value={inviteRole}
                     onChange={(e) => setInviteRole(e.target.value)}
                   >
-                    <option value="member">Member (Can manage assigned tasks)</option>
-                    <option value="admin">Admin (Full organization access)</option>
+                    <option value="member">Member</option>
+                    <option value="admin">Admin</option>
                   </select>
                 </div>
                 
@@ -279,7 +277,7 @@ const Team = () => {
                     disabled={inviteMutation.isPending}
                     className="flex-1 btn-primary flex items-center justify-center gap-2"
                   >
-                    {inviteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send Invite'}
+                    {inviteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send'}
                   </button>
                 </div>
               </form>
@@ -288,7 +286,6 @@ const Team = () => {
         </div>
       )}
 
-      {/* Edit User Modal */}
       <UserModal 
         isOpen={!!selectedUser}
         onClose={() => setSelectedUser(null)}

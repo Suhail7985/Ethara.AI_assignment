@@ -3,13 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { 
   Plus, 
-  MoreVertical, 
   Calendar, 
   MessageSquare, 
   Paperclip,
   Loader2,
-  Filter,
-  Search,
   Edit,
   Trash2
 } from 'lucide-react';
@@ -32,7 +29,6 @@ const Kanban = () => {
       socketService.joinProject(projectId);
 
       socketService.on('taskUpdate', (data) => {
-        // Refresh kanban data
         queryClient.invalidateQueries(['tasks', { project: projectId }]);
         if (data.action === 'comment') {
           queryClient.invalidateQueries(['task', data.taskId]);
@@ -62,11 +58,11 @@ const Kanban = () => {
     mutationFn: (data) => taskService.createTask(data),
     onSuccess: () => {
       queryClient.invalidateQueries(['tasks']);
-      toast.success('Task created successfully');
+      toast.success('Task created');
       setIsModalOpen(false);
     },
     onError: (err) => {
-      toast.error(err.response?.data?.message || 'Failed to create task');
+      toast.error(err.response?.data?.message || 'Error creating task');
     }
   });
 
@@ -74,12 +70,12 @@ const Kanban = () => {
     mutationFn: ({ id, ...data }) => taskService.updateTask(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries(['tasks']);
-      toast.success('Task updated');
+      toast.success('Updated');
       setIsModalOpen(false);
       setSelectedTask(null);
     },
     onError: (err) => {
-      toast.error(err.response?.data?.message || 'Failed to update task');
+      toast.error(err.response?.data?.message || 'Update failed');
     }
   });
 
@@ -87,7 +83,7 @@ const Kanban = () => {
     mutationFn: (id) => taskService.deleteTask(id),
     onSuccess: () => {
       queryClient.invalidateQueries(['tasks']);
-      toast.success('Task deleted');
+      toast.success('Deleted');
     },
   });
 
@@ -131,7 +127,7 @@ const Kanban = () => {
   };
 
   const handleEdit = (task) => {
-    if (!canEdit(task)) return toast.error('You do not have permission to edit this task');
+    if (!canEdit(task)) return toast.error('Permission denied');
     setSelectedTask(task);
     setIsModalOpen(true);
   };
@@ -145,8 +141,8 @@ const Kanban = () => {
   };
 
   const handleDelete = (id, task) => {
-    if (!canDelete(task)) return toast.error('You do not have permission to delete this task');
-    if (window.confirm('Delete this task?')) {
+    if (!canDelete(task)) return toast.error('Permission denied');
+    if (window.confirm('Confirm deletion?')) {
       deleteTaskMutation.mutate(id);
     }
   };
@@ -168,8 +164,8 @@ const Kanban = () => {
     <div className="h-full flex flex-col space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold dark:text-white">Kanban Board</h1>
-          <p className="text-slate-500 text-sm mt-1">Visualize and manage your project workflow.</p>
+          <h1 className="text-2xl font-bold dark:text-white">Kanban</h1>
+          <p className="text-slate-500 text-sm mt-1">Workflow visualization.</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -186,7 +182,7 @@ const Kanban = () => {
           {isAdmin && (
             <button onClick={() => handleCreate()} className="btn-primary py-1.5 flex items-center gap-2 text-sm">
               <Plus className="w-4 h-4" />
-              New Task
+              New
             </button>
           )}
         </div>
