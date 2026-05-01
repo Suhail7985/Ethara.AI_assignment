@@ -69,8 +69,7 @@ const Tasks = () => {
     setIsModalOpen(true);
   };
 
-  const handleEdit = (task) => {
-    if (!canEdit(task)) return toast.error('Permission denied');
+  const handleOpenTask = (task) => {
     setSelectedTask(task);
     setIsModalOpen(true);
   };
@@ -181,7 +180,7 @@ const Tasks = () => {
                   </tr>
                 ))
               ) : tasks?.map((task) => (
-                <tr key={task._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+                <tr key={task._id} onClick={() => handleOpenTask(task)} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${task.status === 'completed' ? 'bg-emerald-500' : 'bg-primary-500'}`}></div>
@@ -220,7 +219,7 @@ const Tasks = () => {
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       {canEdit(task) && (
                         <button 
-                          onClick={() => handleEdit(task)}
+                          onClick={(e) => { e.stopPropagation(); handleOpenTask(task); }}
                           className="p-1 text-slate-400 hover:text-primary-600 transition-colors"
                         >
                           <Edit className="w-4 h-4" />
@@ -228,7 +227,7 @@ const Tasks = () => {
                       )}
                       {canDelete(task) && (
                         <button 
-                          onClick={() => handleDelete(task._id, task)}
+                          onClick={(e) => { e.stopPropagation(); handleDelete(task._id, task); }}
                           className="p-1 text-slate-400 hover:text-red-600 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />

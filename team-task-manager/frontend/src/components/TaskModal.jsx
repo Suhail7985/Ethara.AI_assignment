@@ -45,6 +45,14 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
     enabled: isOpen,
   });
 
+  const { data: taskDetails, isLoading: isTaskLoading } = useQuery({
+    queryKey: ['task', initialData?._id],
+    queryFn: () => taskService.getTask(initialData._id).then(res => res.data.data),
+    enabled: !!initialData?._id && isOpen,
+  });
+
+  const currentTask = taskDetails || initialData;
+
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -70,6 +78,7 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
     mutationFn: (text) => taskService.addComment(initialData._id, { text }),
     onSuccess: () => {
       queryClient.invalidateQueries(['task', initialData._id]);
+      queryClient.invalidateQueries(['tasks']);
       setCommentText('');
       toast.success('Sent');
     }
@@ -133,7 +142,7 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
               onClick={() => setActiveTab('comments')}
               className={`px-4 py-3 text-sm font-bold transition-all border-b-2 flex items-center gap-2 ${activeTab === 'comments' ? 'border-primary-600 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
             >
-              Comments ({initialData.comments?.length || 0})
+              Comments ({currentTask.comments?.length || 0})
             </button>
             <button 
               onClick={() => setActiveTab('activity')}
@@ -249,13 +258,18 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
             </form>
           ) : activeTab === 'comments' ? (
             <div className="p-6 flex flex-col h-full animate-fade-in">
-              <div className="flex-1 space-y-6">
-                {initialData.comments?.length === 0 ? (
-                  <div className="h-40 flex flex-col items-center justify-center text-slate-400 italic bg-slate-50 dark:bg-slate-800/50 rounded-2xl border-2 border-dashed border-slate-100 dark:border-slate-800">
-                    Empty.
-                  </div>
-                ) : (
-                  initialData.comments?.map((comment) => (
+              {isTaskLoading ? (
+                <div className="flex-1 flex items-center justify-center h-40">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary-600" />
+                </div>
+              ) : (
+                <div className="flex-1 space-y-6">
+                  {currentTask.comments?.length === 0 ? (
+                    <div className="h-40 flex flex-col items-center justify-center text-slate-400 italic bg-slate-50 dark:bg-slate-800/50 rounded-2xl border-2 border-dashed border-slate-100 dark:border-slate-800">
+                      Empty.
+                    </div>
+                  ) : (
+                    currentTask.comments?.map((comment) => (
                     <div key={comment._id} className="flex gap-3 group">
                       <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-xs flex-shrink-0">
                         {comment.user?.avatar ? (
@@ -282,9 +296,10 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
                         </div>
                       </div>
                     </div>
-                  ))
-                )}
-              </div>
+                    ))
+                  )}
+                </div>
+              )}
               
               <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 sticky bottom-0 bg-white dark:bg-slate-900">
                 <form onSubmit={handleAddComment} className="relative">
@@ -306,11 +321,15 @@ const TaskModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = 
             </div>
           ) : (
             <div className="p-6 space-y-6 animate-fade-in">
-              {initialData.activity?.length === 0 ? (
+              {isTaskLoading ? (
+                <div className="flex items-center justify-center h-40">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary-600" />
+                </div>
+              ) : currentTask.activity?.length === 0 ? (
                 <div className="text-center py-12 text-slate-400 italic">No history.</div>
               ) : (
                 <div className="relative border-l-2 border-slate-100 dark:border-slate-800 ml-4 pl-8 space-y-8">
-                  {[...initialData.activity].reverse().map((act, i) => (
+                  {[...currentTask.activity].reverse().map((act, i) => (
                     <div key={i} className="relative">
                       <div className="absolute -left-[41px] top-0 w-5 h-5 rounded-full bg-white dark:bg-slate-900 border-2 border-primary-500 flex items-center justify-center">
                         <div className="w-1.5 h-1.5 rounded-full bg-primary-500"></div>

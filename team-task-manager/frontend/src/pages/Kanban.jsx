@@ -126,8 +126,7 @@ const Kanban = () => {
     return isAdmin || task.createdBy?._id === user?._id || task.createdBy === user?._id;
   };
 
-  const handleEdit = (task) => {
-    if (!canEdit(task)) return toast.error('Permission denied');
+  const handleOpenTask = (task) => {
     setSelectedTask(task);
     setIsModalOpen(true);
   };
@@ -229,14 +228,15 @@ const Kanban = () => {
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
-                                className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition-all active:scale-105 active:rotate-2 group"
+                                className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition-all active:scale-105 active:rotate-2 group cursor-pointer"
+                                onClick={() => handleOpenTask(task)}
                               >
                                 <div className="flex items-start justify-between gap-2 mb-2">
                                   <PriorityBadge priority={task.priority} />
                                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     {canEdit(task) && (
                                       <button 
-                                        onClick={() => handleEdit(task)}
+                                        onClick={(e) => { e.stopPropagation(); handleOpenTask(task); }}
                                         className="p-1 text-slate-400 hover:text-primary-600"
                                       >
                                         <Edit className="w-3.5 h-3.5" />
@@ -244,7 +244,7 @@ const Kanban = () => {
                                     )}
                                     {canDelete(task) && (
                                       <button 
-                                        onClick={() => handleDelete(task._id, task)}
+                                        onClick={(e) => { e.stopPropagation(); handleDelete(task._id, task); }}
                                         className="p-1 text-slate-400 hover:text-red-600"
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />
